@@ -71,9 +71,10 @@ class Duration:
 if __name__ == '__main__':
     path = '../data/twitter_stm_rem.csv'
     tweet = Tweet(path)
-    duration = Duration(tweet.stm, 'stm_Orange', '2022-01-01', '2024-12-31')
-    df = duration.get_line_interruption_durations('month')
-    print(df.info())
+    tweet.build()
+    duration = Duration(tweet.df_, 'stm_Orange', '2022-01-01', '2024-12-31')
+    # df = duration.get_line_interruption_durations('month')
+    # print(df.info())
 
 
 

@@ -9,7 +9,6 @@ import seaborn as sns
 from tweet import Tweet
 from _utils import time_df
 
-
 class Interruption:
     def __init__(self, df, start, end):
         self.df = df
