@@ -16,10 +16,28 @@ from sentiment import Sentiment
 from station import Station
 from _utils import LINES_STATIONS
 
-intro = """
+tweet_data = """
 # Final Project Data Science 2024  
-**Data visualization for metro line in montreal area**  
-Data scrapping from mainly twitter, lapresse. The goal was to see the interruption of service in different way.
+## Data visualization of the metro line in the Montreal area
+
+### Sources  
+With the tool Selenium, I got data from Twitter and 3 news websites. For Twitter, it was from the official communication channel to inform the public: **@stm_Orange**, **@stm_Verte**, **@stm_Bleue**, **@stm_Jaune**, and the new one, **@REM_infoservice**.  
+For the news, I searched on their websites using 2 keywords and then filtered again for those exact keywords, since the search engine was returning some random articles.  
+Keywords are **stm**, **rem**.  
+Sources are **lapresse.ca**, **24heures.ca**, and **montrealgazette.com**.
+
+### Objective  
+The first objective was to see an overview of the interruption of service for each line.  
+The REM is fairly new and has screen doors plus it's an automated system. The STM has no screen doors and drivers. I'm focusing here on whether there is a full stop of the line or part of the line. I then calculate from the full stop how much time it took to be fully operational.
+
+### Filters  
+Here are some filters that can be applied to see data in different ways. REM only opened last August and does not have much data. The station chart will not show anything since all 5 stations are interrupted every time.
+"""
+
+news_data = """
+# News sentiment analysis from article containning stm or rem
+
+
 """
 
 interruption_title = 'Interruption of Service'
@@ -39,6 +57,7 @@ years = {
 }
 
 palette = px.colors.sequential.Darkmint
+news_palette = px.colors.sequential.Darkmint
 
 # Incorporate data
 path = '../data/twitter_stm_rem.csv'
@@ -51,7 +70,7 @@ app = Dash(__name__)
 # App layout
 tweet_graph = html.Div(children=[
     html.Div(children=[
-        dcc.Markdown(intro),
+        dcc.Markdown(tweet_data),
         
         html.Br(),
         dcc.Markdown('**Metro Line**'),
@@ -79,12 +98,7 @@ tweet_graph = html.Div(children=[
 
 news_graph = html.Div(children=[
     html.Br(),
-    dcc.Markdown("""
-        # News sentiment analysis from article containning stm or rem
-
-
-    """),
-
+    dcc.Markdown(news_data),
     dcc.Graph(figure={}, id='title_graph', style={'display': 'inline-block'}),
     dcc.Graph(figure={}, id='desc_graph', style={'display': 'inline-block'}),
 ])
@@ -107,7 +121,7 @@ def update_interruption(line, period, start, end):
         x=df.columns.astype(str).values, 
         y=df.index.astype(str).values, 
         title=interruption_title,
-        color_continuous_scale = px.colors.sequential.Plasma_r
+        color_continuous_scale = 'RdBu_r'
     )
 
 #Duration Chart
@@ -126,7 +140,7 @@ def update_duration(line, period, start, end):
         y='duration', 
         color='year', 
         title=duration_title, 
-        color_discrete_sequence = palette
+        color_continuous_scale = 'RdBu_r'
     )
 
 #Station Chart
@@ -139,7 +153,14 @@ def update_duration(line, period, start, end):
 )
 def update_station(line, period, start, end):
     df = Station(tweet.df_).sum_per_station(line, start, end)
-    return px.histogram(df, x='station', y='stop', color='year', title=station_title, color_discrete_sequence = palette)
+    return px.histogram(
+        df, 
+        x='station', 
+        y='stop', 
+        color='year', 
+        title=station_title, 
+        color_discrete_sequence = palette
+    )
 
 #Sentiment Charts
 @callback(
@@ -151,7 +172,14 @@ def update_station(line, period, start, end):
 )
 def update_sentiment(line, period, start, end):
     df = Sentiment().sentiment_df_light
-    return px.histogram(df, x='raw_title_sentiment', color='year', title=sentiment_title_title, category_orders=dict(raw_title_sentiment=['negative', 'neutral', 'positive']), color_discrete_sequence = palette)
+    return px.histogram(
+        df, 
+        x='raw_title_sentiment', 
+        color='year', 
+        title=sentiment_title_title, 
+        category_orders=dict(raw_title_sentiment=['negative', 'neutral', 'positive']), 
+        color_discrete_sequence = news_palette
+    )
 
 @callback(
     Output(component_id =   'desc_graph', component_property = 'figure'),
@@ -162,7 +190,12 @@ def update_sentiment(line, period, start, end):
 )
 def update_sentiment(line, period, start, end):
     df = Sentiment().sentiment_df_light
-    return px.histogram(df, x='raw_description_sentiment', color='year', title=sentiment_title_desc, category_orders=dict(raw_description_sentiment=['negative', 'neutral', 'positive']), color_discrete_sequence = palette)
+    return px.histogram(df, 
+        x='raw_description_sentiment', 
+        color='year', title=sentiment_title_desc, 
+        category_orders=dict(raw_description_sentiment=['negative', 'neutral', 'positive']), 
+        color_discrete_sequence = news_palette
+    )
 
 # Run the app
 if __name__ == '__main__':

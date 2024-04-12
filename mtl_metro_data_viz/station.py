@@ -1,5 +1,9 @@
+import importlib
 from datetime import datetime, timezone
 import pandas as pd
+
+import tweet
+importlib.reload(tweet)
 
 from tweet import Tweet
 from _utils import utc_to_local, time_df, LINES_STATIONS
@@ -48,7 +52,15 @@ if __name__ == '__main__':
     path = '../data/twitter_stm_rem.csv'
     t = Tweet(path)
     t.build()
-    s = Station(t.df_).sum_per_station('stm_Orange')
+    # t.load_preprocess
+    df = t.df_
+    rem = df[df.line == 'REM_infoservice']
+    s = Station(t.df_).sum_per_station('REM_infoservice', '2023', '2024')
+    print(s)
+
+
+    rem_stations = list(LINES_STATIONS['REM_infoservice'].keys())
+    print(rem[rem_stations].sum())
 
 
 

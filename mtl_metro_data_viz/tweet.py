@@ -114,7 +114,8 @@ class Tweet:
                 stop_loc = i
 
             #When hit a restart message, reset the clock and get the time difference
-            if row.restart == 1 and row.slow == 0 and stop_time != None:
+            # if row.restart == 1 and row.slow == 0 and stop_time != None:
+            if row.restart == 1 and stop_time != None:
                 self.df_.loc[stop_loc,'duration'] = (row.date - stop_time).seconds / 60
 
                 #NOTE: could +1 to all stations if no specific?
@@ -133,6 +134,7 @@ class Tweet:
             ).loc[station_range[0]:station_range[1]].index.to_list()
 
     def get_station_range(self, stations, tweet):
+        print(tweet)
         station_range = []
         tweet = tweet.lower().replace('. ', ' ').replace(',', '').split()
         
@@ -183,10 +185,10 @@ class Tweet:
         stm = self._stm()
         self.df_ = pd.concat([rem, stm]).sort_values('date').reset_index(drop=True)
 
-        self.set_duration('stm_Bleue')
-        self.set_duration('stm_Jaune')
-        self.set_duration('stm_Orange')
-        self.set_duration('stm_Verte')
+        # self.set_duration('stm_Bleue')
+        # self.set_duration('stm_Jaune')
+        # self.set_duration('stm_Orange')
+        # self.set_duration('stm_Verte')
         self.set_duration('REM_infoservice')
 
     def _write(self):
@@ -197,6 +199,6 @@ if __name__ == '__main__':
     t = Tweet(path)
     # t.build()
     # t._write()
-    # t.load_preprocess
-    # print(t.df_)
+    t.load_preprocess
+    print(t.df_.columns)
 
