@@ -8,6 +8,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+credential.config
 .Python
 build/
 develop-eggs/
