@@ -1,10 +1,16 @@
+import os
+
 from datetime import datetime, timezone
 import pandas as pd
 import numpy as np
 
-from _utils import utc_to_local, BLEUE, JAUNE, ORANGE, VERTE, REM, LINES_STATIONS
+from mtl_metro_data_visualization.constant._lines import BLEUE, JAUNE, ORANGE, VERTE, REM, LINES_STATIONS
+from mtl_metro_data_visualization.utils._utils import utc_to_local
 
 class Tweet:
+
+    WRITE_PATH = '../../data/tweets_one_hot.csv'
+
     def __init__(self, path):
         self.path = path
         self.df = None
@@ -12,7 +18,7 @@ class Tweet:
 
     @property
     def load_preprocess(self):
-        self.df_ = pd.read_csv('../data/tweets_one_hot.csv')
+        self.df_ = pd.read_csv('../../data/tweets_one_hot.csv')
         self.df_.date = pd.to_datetime(self.df_.date.values, utc=True)
         self.df_.date = self.df_.date.apply(utc_to_local)
 
@@ -134,7 +140,6 @@ class Tweet:
             ).loc[station_range[0]:station_range[1]].index.to_list()
 
     def get_station_range(self, stations, tweet):
-        print(tweet)
         station_range = []
         tweet = tweet.lower().replace('. ', ' ').replace(',', '').split()
         
@@ -185,20 +190,22 @@ class Tweet:
         stm = self._stm()
         self.df_ = pd.concat([rem, stm]).sort_values('date').reset_index(drop=True)
 
-        # self.set_duration('stm_Bleue')
-        # self.set_duration('stm_Jaune')
-        # self.set_duration('stm_Orange')
-        # self.set_duration('stm_Verte')
+        self.set_duration('stm_Bleue')
+        self.set_duration('stm_Jaune')
+        self.set_duration('stm_Orange')
+        self.set_duration('stm_Verte')
         self.set_duration('REM_infoservice')
 
     def _write(self):
-        self.df_.to_csv('../data/tweets_one_hot.csv', index=False)
+        self.df_.to_csv(WRITE_PATH, index=False)
 
 if __name__ == '__main__':
-    path = '../data/twitter_stm_rem.csv'
+    path = '../../data/twitter_stm_rem.csv'
     t = Tweet(path)
-    # t.build()
+    t.build()
     # t._write()
-    t.load_preprocess
-    print(t.df_.columns)
+    # t.load_preprocess
+    # print(t.df_.columns)
+
+
 
