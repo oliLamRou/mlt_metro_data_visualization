@@ -37,6 +37,20 @@ class TrainingData:
 
         return self._embedding_model
 
+    def string_cleaning(self):
+        #NOTE: URL, g 1 23 3.3k, missing
+        pattern = '|'.join(
+            [
+                '#stminfo',
+                '#stm',
+                '!',
+                'http\S+',
+                '\s+[a-z]\s+.*\s+.*k$',
+                '\s+[0-9]^\s\d{3}'
+            ])
+
+        self.training_data.tweet = self.training_data.tweet.str.lower().replace(pattern, '', regex=True)
+
     def sentence_to_vec(self, sentence):
         return list(self.embedding_model.encode(sentence))
 
@@ -47,6 +61,7 @@ class TrainingData:
     def process_embedding(self):
         #For now working only on tweet + stop
         self.training_data = self.df[['tweet', 'stop']].copy()
+        self.string_cleaning()
         self.training_data['embedding'] = self.df['tweet'].apply(self.sentence_to_vec)
 
         return self.training_data
@@ -63,4 +78,9 @@ class TrainingData:
 
 if __name__ == '__main__':
     t = TrainingData()
-    # t.build()
+    t.build()
+    # pattern = '|'.join(['#stminfo', '#stm', '!', 'http\S+', '\s+[a-z]\s+.*\s+.*k$', '\s+[0-9]^\s\d{3}'])
+    # df = t.df.tweet.str.lower().replace(pattern, '', regex=True)
+    # for s in df.values:
+    #     print(s, '\n')
+

@@ -106,8 +106,6 @@ class Twitter:
         self.scrap_twitter()
 
 
-
-
-t = Twitter('RaoulGMI', silent=False)
-t.login_twitter()
+if __name__ == '__main__':
+    pass
 

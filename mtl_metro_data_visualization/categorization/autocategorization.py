@@ -1,8 +1,10 @@
 import ast
 import pandas as pd
 import tensorflow as tf
+import keras
 
 from mtl_metro_data_visualization.constant.path import TRAINING_DATA_PATH
+from mtl_metro_data_visualization.categorization.training_data import TrainingData
 
 class Autocategorization:
 
@@ -43,9 +45,12 @@ class Autocategorization:
     def model(self):
         if self._model == None:
             self._model = tf.keras.Sequential()
+            self._model.add(tf.keras.layers.Dense(128, activation='relu'))
+            self._model.add(tf.keras.layers.Dropout(0.01))
+            self._model.add(tf.keras.layers.Dense(64, activation='relu'))
+            self._model.add(tf.keras.layers.Dropout(0.01))
             self._model.add(tf.keras.layers.Dense(32, activation='relu'))
-            self._model.add(tf.keras.layers.Dense(32, activation='relu'))
-            self._model.add(tf.keras.layers.Dense(32, activation='relu'))
+            self._model.add(tf.keras.layers.Dropout(0.01))
             self._model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
             self._model.compile(
@@ -78,6 +83,7 @@ class Autocategorization:
 
     def training(self, epochs):
         history = self.model.fit(self.train_data, epochs=epochs, validation_data=self.test_data)
+        self.model.save('../../model/stop.keras')
 
     def validation(self):
         predictions = self.model.predict(self.val_data)
@@ -89,14 +95,16 @@ class Autocategorization:
             if val_stop[i] != pred:
                 print(predictions[i][0], val_stop[i], val_tweet[i])
 
+    def predict(self, string):
+        tweet = 'something'
+        loaded_model = keras.saving.load_model('../../model/stop.keras')
+        embedding = TrainingData().sentence_to_vec(tweet)
+        print(loaded_model.predict(embedding))
+
     def build(self):
         self.training(10)
-        # self.validation()
+        self.validation()
 
 if __name__ == '__main__':
     a = Autocategorization()
-    a.build()
-
-
-
-
+    a.predict('something')
