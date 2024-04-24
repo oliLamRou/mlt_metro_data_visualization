@@ -10,7 +10,7 @@ from mtl_metro_data_visualization.utils._utils import utc_to_local
 
 class Tweet:
     def __init__(self):
-        self.df = None
+        self._df = pd.DataFrame()
         self.df_ = None
 
     @property
@@ -20,11 +20,14 @@ class Tweet:
         self.df_.date = self.df_.date.apply(utc_to_local)
         return self.df_
 
-    def _load(self):
-        df = pd.read_csv(TWITTER_STM_REM_PATH)
-        df.date = pd.to_datetime(df.date.values, utc=True)
-        df.date = df.date.apply(utc_to_local)
-        return df
+    @property
+    def df(self):
+        if self._df.empty:
+            self._df = pd.read_csv(TWITTER_STM_REM_PATH)
+            self._df.date = pd.to_datetime(self._df.date.values, utc=True)
+            self._df.date = self._df.date.apply(utc_to_local)
+
+        return self._df
 
     def _rem(self):
         df = self.df[self.df.line == 'REM_infoservice'].reset_index(drop=True)
@@ -36,27 +39,39 @@ class Tweet:
 
     def _stm(self):
         df = self.df[self.df.line != 'REM_infoservice'].reset_index(drop=True)
-        remove = [
+        remove_english = [
             'the',
             'with',
             'issue',
             'ongoing',
             'holiday',
             'between',
-            'Normal métro service',
             'disruption',
-            'Seuls les interruptions de service',
-            'Planfication sensée',
             'smart',
-            'limite temporairement la diffusion automatisée',
-            'peuvent causer',
-            '@.*',
             'stopping',
             'What',
             'We'
         ]
-        stop = 'interruption|Arrêt ligne|Arrêt prolongé ligne'  
-        slow = 'reprise|Perturbation du service'
+
+        remove = [
+            'Normal métro service',
+            'Seuls les interruptions de service',
+            'Planfication sensée',
+            'limite temporairement la diffusion automatisée',
+            'peuvent causer',
+            '@.*',
+            'Danny',
+        ]
+
+        stop = [
+            'interruption|Arrêt ligne',
+            'Arrêt prolongé ligne',
+            '«utilisation du métro»',
+            'reprise',
+            'Perturbation du service',
+            'Le service demeure au ralenti',
+        ]
+
         restart = [
             'rétabli',
             'fin de la perturbation',
@@ -64,22 +79,25 @@ class Tweet:
             '"interruption de service .* terminée"'
         ]
         
-        return self.df_encoding(df, '|'.join(remove), stop, slow, '|'.join(restart))
+        return self.df_encoding(
+            df,
+            '|'.join(remove + remove_english),
+            '|'.join(stop), 
+            '|'.join(restart))
 
-    def df_encoding(self, df, remove, stop, slow, restart):
+    def df_encoding(self, df, remove, stop, restart):
         df_ = df.copy()
         df_ = df_[~df_.tweet.str.contains(remove, case=False)].reset_index(drop=True)
         df_['stop'] = df_.tweet.str.contains(stop, case=False).astype(int)
-        df_['slow'] = df_.tweet.str.contains(slow, case=False).astype(int)
         df_['restart'] = df_.tweet.str.contains(restart, case=False).astype(int)
 
-        df_['duration'] = np.nan
+        # df_['duration'] = np.nan
 
-        stations = list(set(list(BLEUE.keys()) + list(JAUNE.keys()) + list(ORANGE.keys()) + list(VERTE.keys()) + list(REM.keys())))
-        stations.sort()
+        # stations = list(set(list(BLEUE.keys()) + list(JAUNE.keys()) + list(ORANGE.keys()) + list(VERTE.keys()) + list(REM.keys())))
+        # stations.sort()
         
-        for station in stations:
-            df_[station] = 0
+        # for station in stations:
+        #     df_[station] = 0
         
         return df_
 
@@ -181,29 +199,39 @@ class Tweet:
             #Get duration per restart for a full day
             self.set_duration_per_restart(date, line_name)
 
-    def build(self):
-        self.df = self._load()
-
-        rem = self._rem()
+    def build(self, write=False):
+        # rem = self._rem()
         stm = self._stm()
-        self.df_ = pd.concat([rem, stm]).sort_values('date').reset_index(drop=True)
+        # self.df_ = pd.concat([rem, stm]).sort_values('date').reset_index(drop=True)
+        self.df_ = stm.copy()
 
-        self.set_duration('stm_Bleue')
-        self.set_duration('stm_Jaune')
-        self.set_duration('stm_Orange')
-        self.set_duration('stm_Verte')
-        self.set_duration('REM_infoservice')
+        # self.set_duration('stm_Bleue')
+        # self.set_duration('stm_Jaune')
+        # self.set_duration('stm_Orange')
+        # self.set_duration('stm_Verte')
+        # self.set_duration('REM_infoservice')
+        if write:
+            self._write()
 
     def _write(self):
         self.df_.to_csv(TWEET_ONE_HOT_PATH, index=False)
 
+    def print_tweet(self):
+        stop = self.df_[(self.df_.stop == 0) & (self.df_.restart == 0)]
+        for tweet in stop.tweet.values:
+            print(tweet, '\n')
+
+    def tweet_has(self, string):
+        tweets = self.df_[self.df_.tweet.str.contains(string)]
+        for tweet in tweets.tweet.values:
+            print(tweet, '\n')
+
 if __name__ == '__main__':
-    path = '../../data/twitter_stm_rem.csv'
-    t = Tweet(path)
-    t.build()
-    # t._write()
-    # t.load_preprocess
-    # print(t.df_.columns)
+    t = Tweet()
+    t.build(write=False)
+
+    # t.print_tweet()
+    # t.tweet_has('Danny')
 
 
 
