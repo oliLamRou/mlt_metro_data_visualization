@@ -5,25 +5,23 @@ import pandas as pd
 import numpy as np
 
 from mtl_metro_data_visualization.constant._lines import BLEUE, JAUNE, ORANGE, VERTE, REM, LINES_STATIONS
+from mtl_metro_data_visualization.constant.path import TWITTER_STM_REM_PATH, TWEET_ONE_HOT_PATH
 from mtl_metro_data_visualization.utils._utils import utc_to_local
 
 class Tweet:
-
-    WRITE_PATH = '../../data/tweets_one_hot.csv'
-
-    def __init__(self, path):
-        self.path = path
+    def __init__(self):
         self.df = None
         self.df_ = None
 
     @property
     def load_preprocess(self):
-        self.df_ = pd.read_csv('../../data/tweets_one_hot.csv')
+        self.df_ = pd.read_csv(TWEET_ONE_HOT_PATH)
         self.df_.date = pd.to_datetime(self.df_.date.values, utc=True)
         self.df_.date = self.df_.date.apply(utc_to_local)
+        return self.df_
 
     def _load(self):
-        df = pd.read_csv(self.path)
+        df = pd.read_csv(TWITTER_STM_REM_PATH)
         df.date = pd.to_datetime(df.date.values, utc=True)
         df.date = df.date.apply(utc_to_local)
         return df
@@ -197,7 +195,7 @@ class Tweet:
         self.set_duration('REM_infoservice')
 
     def _write(self):
-        self.df_.to_csv(WRITE_PATH, index=False)
+        self.df_.to_csv(TWEET_ONE_HOT_PATH, index=False)
 
 if __name__ == '__main__':
     path = '../../data/twitter_stm_rem.csv'
