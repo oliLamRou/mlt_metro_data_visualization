@@ -5,10 +5,10 @@ from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 
 from mtl_metro_data_visualization.categorization.tweet import Tweet
+from mtl_metro_data_visualization.constant.path import TRAINING_DATA_PATH
 
 class TrainingData:
     EMBEDDING_MODEL_PATH = '../../model/french_semantic'
-    TRAINING_DATA_PATH = '../../data/tweets/' #put in constant file
 
     def __init__(self):
         self._df = pd.DataFrame()
@@ -30,6 +30,7 @@ class TrainingData:
     @property
     def embedding_model(self):
         if self._embedding_model == None:
+            #NOTE: not sure if should load model everytime
             # model =  SentenceTransformer("Sahajtomar/french_semantic")
             # model.save(EMBEDDING_MODEL_PATH)
             self._embedding_model = SentenceTransformer(self.EMBEDDING_MODEL_PATH)
@@ -51,9 +52,9 @@ class TrainingData:
         return self.training_data
 
     def save_training_data(self):
-        self.train_data.to_csv(self.TRAINING_DATA_PATH + 'train_data.csv', index=False)
-        self.test_data.to_csv(self.TRAINING_DATA_PATH  + 'test_data.csv', index=False)
-        self.val_data.to_csv(self.TRAINING_DATA_PATH   + 'val_data.csv', index=False)
+        self.train_data.to_csv(TRAINING_DATA_PATH + 'train_data.csv', index=False)
+        self.test_data.to_csv(TRAINING_DATA_PATH  + 'test_data.csv', index=False)
+        self.val_data.to_csv(TRAINING_DATA_PATH   + 'val_data.csv', index=False)
 
     def build(self):
         self.process_embedding()
@@ -62,4 +63,4 @@ class TrainingData:
 
 if __name__ == '__main__':
     t = TrainingData()
-    t.build()
+    # t.build()
