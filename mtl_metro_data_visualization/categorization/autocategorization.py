@@ -1,5 +1,6 @@
 import ast
 import pandas as pd
+import numpy as np
 import tensorflow as tf
 import keras
 
@@ -12,44 +13,40 @@ class Autocategorization:
     def __init__(self):
         self._model = None
 
-        self._train_data = None
-        self._test_data = None
-        self._val_data = None
-        self._val_data_df = None
+        self._train_data_tf = None
+        self._test_data_tf = None
+        self._val_data_tf = None
+
+        self.training_data = TrainingData()
+        self.training_data.build()
 
     @property
-    def train_data(self):
-        if self._train_data == None:
-            self._train_data = self.load_csv_option('train_data.csv')
-            self._train_data = self.df_to_dataset(self._train_data)
+    def train_data_tf(self):
+        if self._train_data_tf == None:
+            self._train_data_tf = self.df_to_dataset(self.training_data.train_data)
 
-        return self._train_data
-
-    @property
-    def test_data(self):
-        if self._test_data == None:
-            self._test_data = self.load_csv_option('test_data.csv')
-            self._test_data = self.df_to_dataset(self._test_data)
-
-        return self._test_data
+        return self._train_data_tf
 
     @property
-    def val_data(self):
-        if self._val_data == None:
-            self._val_data_df = self.load_csv_option('val_data.csv')
-            self._val_data = self.df_to_dataset(self._val_data_df)
+    def test_data_tf(self):
+        if self._test_data_tf == None:
+            self._test_data_tf = self.df_to_dataset(self.training_data.test_data)
 
-        return self._val_data
+        return self._test_data_tf
+
+    @property
+    def val_data_tf(self):
+        if self._val_data_tf == None:
+            self._val_data_tf = self.df_to_dataset(self.training_data.val_data)
+
+        return self._val_data_tf
 
     @property
     def model(self):
         if self._model == None:
             self._model = tf.keras.Sequential()
-            self._model.add(tf.keras.layers.Dense(128, activation='relu'))
-            self._model.add(tf.keras.layers.Dropout(0.01))
-            self._model.add(tf.keras.layers.Dense(64, activation='relu'))
-            self._model.add(tf.keras.layers.Dropout(0.01))
-            self._model.add(tf.keras.layers.Dense(32, activation='relu'))
+            self._model.add(tf.keras.layers.Embedding(2569, 16))
+            self._model.add(tf.keras.layers.Dense(16, activation='relu'))
             self._model.add(tf.keras.layers.Dropout(0.01))
             self._model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
@@ -57,21 +54,16 @@ class Autocategorization:
                 optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                 loss=tf.keras.losses.BinaryCrossentropy(),
                 metrics=['accuracy']
-            )    
+            )    # loss=tf.keras.losses.BinaryCrossentropy(),
 
         return self._model
-
-    def load_csv_option(self, filename):
-        return pd.read_csv(TRAINING_DATA_PATH + filename, converters={'embedding': self.str_to_numpy})
-
-    def str_to_numpy(self, string):
-        return (ast.literal_eval(string))
 
     def df_to_dataset(self, dataframe, shuffle=True, batch_size=32):
         df = dataframe.copy()
         labels = df.pop('stop')
         df = df['embedding'].to_list()
         ds = tf.data.Dataset.from_tensor_slices((df, labels))
+        print(ds)
         
         if shuffle:
             ds = ds.shuffle(buffer_size=len(dataframe))
@@ -82,18 +74,25 @@ class Autocategorization:
         return ds
 
     def training(self, epochs):
-        history = self.model.fit(self.train_data, epochs=epochs, validation_data=self.test_data)
+        history = self.model.fit(self.train_data_tf, epochs=epochs)#validation_data=self.test_data
         self.model.save('../../model/stop.keras')
 
     def validation(self):
-        predictions = self.model.predict(self.val_data)
+        predictions = self.model.predict(self.test_data_tf)
 
-        val_stop = self._val_data_df.stop.to_list()
-        val_tweet = self._val_data_df.tweet.to_list()
+        test_stop = self.training_data.test_data.stop.to_list()
+        test_tweet = self.training_data.test_data.tweet.to_list()
+        good = 0
+        bad = 0
         for i in range(predictions.shape[0]):
             pred = 0 if predictions[i][0] < 0.97 else 1
-            if val_stop[i] != pred:
-                print(predictions[i][0], val_stop[i], val_tweet[i])
+            if test_stop[i] == pred:
+                good += 1
+            else:
+                bad += 1
+
+        print(f'good: {good}, bad: {bad}')
+                # print(predictions[i][0], val_stop[i], val_tweet[i])
 
     def predict(self, string):
         tweet = 'something'
@@ -107,4 +106,7 @@ class Autocategorization:
 
 if __name__ == '__main__':
     a = Autocategorization()
-    a.predict('something')
+    # a.build()
+    print(a.train_data_tf)
+
+    # a.predict('something')

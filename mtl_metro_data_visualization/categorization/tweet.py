@@ -223,15 +223,15 @@ class Tweet:
 
     def tweet_has(self, string):
         tweets = self.df_[self.df_.tweet.str.contains(string)]
-        for tweet in tweets.tweet.values:
-            print(tweet, '\n')
+        for index in tweets.index:
+            print(tweets.loc[index].stop, tweets.loc[index].tweet, '\n')
 
 if __name__ == '__main__':
     t = Tweet()
     t.build(write=False)
 
     # t.print_tweet()
-    # t.tweet_has('Danny')
+    t.tweet_has('normal')
 
 
 
