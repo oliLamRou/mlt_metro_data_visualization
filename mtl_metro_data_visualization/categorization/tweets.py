@@ -26,9 +26,13 @@ class Tweets:
         (r"\d{1,2}h\d{2}"),
         (r"[\[\]()\/\\!?.,:;-]"),
         "BLEUE",
+        "bleue",
         "VERTE",
+        "verte",
         "JAUNE",
+        "jaune",
         "ORANGE",
+        "orange",
         "REM",
         "A1",
     ]
@@ -73,6 +77,9 @@ class Tweets:
 
         #remove short words
         self._df.preprocessed = self._df.preprocessed.apply(remove_short_word)
+
+        #lower case
+        self._df.preprocessed = self._df.preprocessed.str.lower()
 
     def remove_english_tweets(self):
         swe = []
