@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from ast import literal_eval
 
 import pandas as pd
+from nltk.corpus import stopwords
 
 from mtl_metro_data_visualization.constant import _lines
 from mtl_metro_data_visualization.constant import _path
@@ -73,6 +74,20 @@ class Tweets:
         #remove short words
         self._df.preprocessed = self._df.preprocessed.apply(remove_short_word)
 
+    def remove_english_tweets(self):
+        swe = []
+        for word in stopwords.words('english'):
+            if len(word) > 2:
+                swe.append(word)
+
+        def has_english_words(tweet):
+            if set(tweet.split()) & set(swe):
+                return True
+
+            return False
+
+        self._df = self._df[~self._df.tweet.apply(has_english_words)]
+
     def ingest_scrapped_tweet(self):
         #Import and merge all line in 1 df
         self.merge_lines()
@@ -80,6 +95,9 @@ class Tweets:
         #Take raw_text col and make a simple tweet col with only main message
         self._df['tweet'] = self._df.raw_text.apply(lambda x: " ".join(x[5:]))
         self.tweet_preprocessing()
+
+        #Removing English
+        self.remove_english_tweets()
 
     def tweet_contains(self, col, string):
         tweets = self.df_[self.df_[col].str.contains(string)]
