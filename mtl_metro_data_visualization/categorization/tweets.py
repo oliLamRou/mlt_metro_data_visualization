@@ -49,7 +49,7 @@ class Tweets:
 
     def merge_lines(self):
         for line in _lines.LINES_STATIONS.keys():
-            filepath = f"{_path.SCRAP_DIR}/raw_twitter_{line}.csv"
+            filepath = f"{_path.SCRAP_DIR}/scrap_twitter_{line}.csv"
             if not os.path.exists(filepath):
                 continue
 
@@ -114,7 +114,7 @@ class Tweets:
 if __name__ == '__main__':
     t = Tweets()
     t.ingest_scrapped_tweet()
-    print(t.df)
+    print(t.df.index.size)
 
 
 
