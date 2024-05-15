@@ -1,3 +1,6 @@
+MAX_WORDS = 60
+MAX_LEN = 10
+
 STOP = [
     'interruption service ligne entre',
     'arrêt ligne entre',
@@ -11,7 +14,10 @@ STOP = [
     'bonjour service maintenant interrompu',
     'arrêt service ligne',
     'nous oblige interrompre service',
-    'service interruption continues'
+    'service interruption continues',
+    'service devrait reprendre sous',
+    'actuellement interruption service ligne',
+    "d'interruption service actuellement ligne"
 ]
 
 NORMAL = [
@@ -34,14 +40,17 @@ SLOW = [
     'bonjour service régulier reprend graduellement',
     'bonjour service reprise graduelle',
     'service maintenant reprise graduelle',
-    'reprise graduelle service'
+    'reprise graduelle service',
+    'service régulier reprend graduellement'
 ]
 
 RESTART = [
     'état service métro service rétabli',
     'bonjour service rétabli',
     'service normal cause ralentissement résolue',
-    'service maintenant normal'
+    'service maintenant normal',
+    'service reprend actuellement',
+    'service maintenant rétabli ligne'
 ]
 
 ELEVATOR = [

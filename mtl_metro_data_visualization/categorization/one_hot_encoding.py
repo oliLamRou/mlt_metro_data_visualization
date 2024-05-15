@@ -23,6 +23,5 @@ class OneHotEncoding(Tweets):
 if __name__ == '__main__':
     oh = OneHotEncoding()
     oh.encoding()
-    oh._df = oh.df.sort_values('preprocessed')
-    for tweet in oh.df[oh.df.stop == 1].preprocessed:
-        print(tweet)
+    for tweet in oh.df.sample(1000)[oh.df.event == 1].preprocessed:
+        print(tweet, '\n')
