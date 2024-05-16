@@ -1,3 +1,5 @@
+import pandas as pd
+
 VERTE = {
     'angrignon': 1,
     'monk': 2,
@@ -91,9 +93,18 @@ REM = {
 }
 
 LINES_STATIONS = {
-    'stm_Bleue': BLEUE,
-    'stm_Jaune': JAUNE,
-    'stm_Orange': ORANGE,
-    'stm_Verte': VERTE,
-    'REM_infoservice': REM,
+    'stm_bleue': BLEUE,
+    'stm_jaune': JAUNE,
+    'stm_orange': ORANGE,
+    'stm_verte': VERTE,
+    'rem_infoservice': REM,
 }
+
+
+if __name__ == '__main__':
+    df = pd.DataFrame()
+    for line, stations in LINES_STATIONS.items():
+        new = pd.DataFrame.from_dict({line: stations.keys()})
+        df = pd.concat([df, new], axis=1)
+
+    df.to_csv('LINES_STATIONS.csv')

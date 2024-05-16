@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 from ast import literal_eval
 
 import pandas as pd
@@ -82,29 +82,37 @@ class Tweets:
         self._df.preprocessed = self._df.preprocessed.str.lower()
 
     def remove_english_tweets(self):
-        swe = []
-        for word in stopwords.words('english'):
-            if len(word) > 2:
-                swe.append(word)
-
         def has_english_words(tweet):
             if set(tweet.split()) & set(swe):
                 return True
 
             return False
 
+        swe = []
+        for word in stopwords.words('english'):
+            if len(word) > 2:
+                swe.append(word)
+
         self._df = self._df[~self._df.tweet.apply(has_english_words)]
+        self._df.sort_values('raw_date', inplace=True)
+        self._df.reset_index(drop=True, inplace=True)
 
     def ingest_scrapped_tweet(self):
         #Import and merge all line in 1 df
         self.merge_lines()
 
-        #Take raw_text col and make a simple tweet col with only main message
+        #Join the list of string (raw_text) to make a full lengh message
         self._df['tweet'] = self._df.raw_text.apply(lambda x: " ".join(x[5:]))
+
+        #Removing spot word and more
         self.tweet_preprocessing()
 
-        #Removing English
+        #Removing some English tweets
         self.remove_english_tweets()
+
+        #Converting raw_date to date(timesaving and tz)
+        date = pd.to_datetime(self._df.raw_date.values, utc=True).tz_convert(tz='US/Eastern')
+        self._df['date'] = date
 
     def tweet_contains(self, col, string):
         tweets = self.df_[self.df_[col].str.contains(string)]
@@ -114,7 +122,7 @@ class Tweets:
 if __name__ == '__main__':
     t = Tweets()
     t.ingest_scrapped_tweet()
-    print(t.df.index.size)
+    # print(t.df.index.size)
 
 
 
