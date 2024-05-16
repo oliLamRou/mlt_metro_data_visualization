@@ -5,7 +5,7 @@ from ast import literal_eval
 import pandas as pd
 from nltk.corpus import stopwords
 
-from mtl_metro_data_visualization.constant import _lines
+from mtl_metro_data_visualization.constant import _lines_stations
 from mtl_metro_data_visualization.constant import _path
 from mtl_metro_data_visualization.utils._utils import utc_to_local
 
@@ -25,16 +25,12 @@ class Tweets:
         (r"\b\d+(\.\d+)?K\b"),
         (r"\d{1,2}h\d{2}"),
         (r"[\[\]()\/\\!?.,:;-]"),
-        "BLEUE",
         "bleue",
-        "VERTE",
         "verte",
-        "JAUNE",
         "jaune",
-        "ORANGE",
         "orange",
-        "REM",
-        "A1",
+        "rem",
+        "a1",
     ]
 
     def __init__(self):
@@ -48,7 +44,7 @@ class Tweets:
         return self._df
 
     def merge_lines(self):
-        for line in _lines.LINES_STATIONS.keys():
+        for line in _lines_stations.LINES_STATIONS.keys():
             filepath = f"{_path.SCRAP_DIR}/scrap_twitter_{line}.csv"
             if not os.path.exists(filepath):
                 continue
@@ -71,15 +67,15 @@ class Tweets:
         #copy tweet to preprocessed
         self._df['preprocessed'] = self._df.tweet
 
+        #lower case
+        self._df.preprocessed = self._df.preprocessed.str.lower()
+
         #Regex match and replace with ""
         for r in self.REGEX:
             self._df.preprocessed = self._df.preprocessed.str.replace(r, "", regex=True)
 
         #remove short words
         self._df.preprocessed = self._df.preprocessed.apply(remove_short_word)
-
-        #lower case
-        self._df.preprocessed = self._df.preprocessed.str.lower()
 
     def remove_english_tweets(self):
         def has_english_words(tweet):
@@ -122,6 +118,7 @@ class Tweets:
 if __name__ == '__main__':
     t = Tweets()
     t.ingest_scrapped_tweet()
+    print(t.df.loc[582])
     # print(t.df.index.size)
 
 

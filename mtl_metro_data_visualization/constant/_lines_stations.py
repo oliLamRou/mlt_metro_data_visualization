@@ -66,7 +66,7 @@ ORANGE = {
 JAUNE = {
     'berri-uqam': 1,
     'jean-drapeau': 2,
-    'longueuil–université-de-sherbrooke': 3
+    'longueuil': 3
 }
 
 BLEUE = {
@@ -100,6 +100,16 @@ LINES_STATIONS = {
     'rem_infoservice': REM,
 }
 
+def get_all_stations_name():
+    all_stations = []
+    for line, stations in LINES_STATIONS.items():
+        all_stations += stations.keys()
+
+    all_stations = list(set(all_stations))
+    all_stations.sort()
+    return all_stations
+
+ALL_STATIONS_NAME = get_all_stations_name()
 
 if __name__ == '__main__':
     df = pd.DataFrame()
