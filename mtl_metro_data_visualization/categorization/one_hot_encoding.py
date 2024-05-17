@@ -6,6 +6,7 @@ from mtl_metro_data_visualization.categorization.tweets import Tweets
 from mtl_metro_data_visualization.constant._categories import CATEGORIES
 from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS, ALL_STATIONS_NAME
 from mtl_metro_data_visualization.constant._path import TWEET_ONE_HOT_PATH
+from mtl_metro_data_visualization.utils._utils import utc_to_local
 
 class OneHotEncoding(Tweets):
     def __init__(self, on_disk=False, path=None, save=False):
@@ -17,17 +18,6 @@ class OneHotEncoding(Tweets):
             self.path = TWEET_ONE_HOT_PATH
 
         self.save = save
-
-    @property
-    def df(self):
-        if self.on_disk == False:
-            if not os.path.exists(TWEET_ONE_HOT_PATH):
-                raise ValueError(f"Encoding file doesn't exist at {TWEET_ONE_HOT_PATH}. Set on_disk to False, change path or use write function.")
-            self._df = pd.read_csv(self.path)
-        else:
-            self.build()
-
-        return self._df
 
     #STATIONS PROCESS
     def _closed_stations(self):
@@ -66,12 +56,12 @@ class OneHotEncoding(Tweets):
         return start, end
 
     #DURATION PROCESS
-    def set_duration(self):
+    def _set_duration(self):
         for date in self.df.date.dt.strftime('%Y-%m-%d').unique():
-            single_day = self.get_open_to_close(date)
-            self.set_duration_per_restart(single_day)
+            single_day = self._get_open_to_close(date)
+            self._set_duration_per_day(single_day)
 
-    def get_open_to_close(self, date):
+    def _get_open_to_close(self, date):
         start = pd.to_datetime(f'{date} 05:00:00').tz_localize("US/Eastern")
         start, start + pd.offsets.Hour(22)
         
@@ -80,7 +70,7 @@ class OneHotEncoding(Tweets):
             (self.df.date < start + pd.offsets.Hour(23))
         ]
 
-    def set_duration_per_restart(self, single_day):
+    def _set_duration_per_day(self, single_day):
         #Working on a single operation day
         stop_time = {}
         durations = []
@@ -103,21 +93,33 @@ class OneHotEncoding(Tweets):
 
                 del stop_time[line_name]
 
-    def save(self):
-        if self.save and self.path:
-            self.df.to_csv(self.path)
+    def _save(self):
+        if self.path:
+            print(f'Saving here: {TWEET_ONE_HOT_PATH}')
+            self.df.to_csv(self.path, index=False)
+        else:
+            print("Saving failed because there no path specified.")
 
     def build(self):
-        for k, v in CATEGORIES.items():
-            self._df[k] = self.df.preprocessed.str.contains("|".join(v)).astype(int)
+        if self.on_disk:
+            self._df = pd.read_csv(TWEET_ONE_HOT_PATH)
+            self._df.date = pd.to_datetime(self._df.date.values, utc=True)
+            self._df.date = self._df.date.apply(utc_to_local)
 
-        self._closed_stations()
-        self.set_duration()
-        self.save()
+        else:
+            for k, v in CATEGORIES.items():
+                self._df[k] = self.df.preprocessed.str.contains("|".join(v)).astype(int)
+
+            self._closed_stations()
+            self._set_duration()
+
+        if not self.on_disk and self.save:
+            self._save()
 
 if __name__ == '__main__':
-    oh = OneHotEncoding(True)
-    print(oh.df)
+    oh = OneHotEncoding(on_disk=True)
+    oh.build()
+    print(oh.df.info())
 
 
 
