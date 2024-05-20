@@ -9,20 +9,30 @@ from mtl_metro_data_visualization.constant._path import TWEET_ONE_HOT_PATH
 from mtl_metro_data_visualization.utils._utils import utc_to_local
 
 class OneHotEncoding(Tweets):
-    def __init__(self, on_disk=False, path=None, save=False):
+    """
+    Class for performing one-hot encoding on tweets related to the Montreal metro system.
+    
+    Attributes:
+        load_from_disk (bool): Flag to indicate if data will be load from disk.
+        path (str): Path to save the one-hot encoded data.
+        save (bool): Flag to indicate if the one-hot encoded data should be saved.
+    """
+    def __init__(self, load_from_disk=True, save=False):
+        """
+        Initializes the OneHotEncoding object with optional parameters.
+
+        """        
         super().__init__()
-        self.on_disk = on_disk
-        if path:
-            self.path = path
-        else:
-            self.path = TWEET_ONE_HOT_PATH
+        self.load_from_disk = load_from_disk
+        self.path = TWEET_ONE_HOT_PATH
 
         self.save = save
+        self.build()
 
     #STATIONS PROCESS
     def _closed_stations(self):
         #Add all stations columm set to 0
-        oh._df[ALL_STATIONS_NAME] = 0
+        self._df[ALL_STATIONS_NAME] = 0
 
         #Get stop or slow
         stop_slow_df = self.df[
@@ -31,7 +41,7 @@ class OneHotEncoding(Tweets):
         ]
         #Loop rows and set 1 to station in range
         for i, row in stop_slow_df.iterrows():
-            start, end = oh._get_station_range(row.preprocessed)
+            start, end = self._get_station_range(row.preprocessed)
             if not start or not end:
                 continue
 
@@ -41,10 +51,18 @@ class OneHotEncoding(Tweets):
             stations_in_range = [station for station, index in line.items() if start_index <= index <= end_index]
 
             #Encoding
-            self._df.loc[i, stations_in_range] = 1
+            self.df.loc[i, stations_in_range] = 1
 
     def _get_station_range(self, tweet):
-        # tweet = tweet.replace('.', '').replace(',', '').lower()
+        """
+        Extracts the start and end stations from a tweet.
+
+        Args:
+            tweet (str): Preprocessed tweet text.
+
+        Returns:
+            tuple: Start and end station names.
+        """        
         words = tweet.split()
         start = []
         end = []
@@ -62,8 +80,16 @@ class OneHotEncoding(Tweets):
             self._set_duration_per_day(single_day)
 
     def _get_open_to_close(self, date):
+        """
+        Retrieves tweets for a single day of metro operations.
+
+        Args:
+            date (str): The date for which to retrieve tweets.
+
+        Returns:
+            DataFrame: Filtered dataframe with tweets for the specified date.
+        """
         start = pd.to_datetime(f'{date} 05:00:00').tz_localize("US/Eastern")
-        start, start + pd.offsets.Hour(22)
         
         return self.df[
             (self.df.date > start) &
@@ -71,20 +97,22 @@ class OneHotEncoding(Tweets):
         ]
 
     def _set_duration_per_day(self, single_day):
-        #Working on a single operation day
+        """
+        Sets the duration of interruptions per line for a single day.
+
+        Args:
+            single_day (DataFrame): DataFrame containing tweets for a single day.
+        """        
         stop_time = {}
         durations = []
         stations = set()
         
-        #Loop through 1 day
         for i, row in single_day.iterrows():
             line_name = row.line
 
-            #Get the first stop time if not already in an interruption
             if row.stop == 1 and stop_time.get(line_name) == None:
                 stop_time[line_name] = row.date
 
-            #When hit a restart message, reset the clock and get the time difference
             if (row.restart == 1 or row.normal == 1) and stop_time.get(line_name) != None:
                 stop_index = single_day[single_day.date == stop_time[line_name]].index
                 #Here I'm adding 10 min since stm says they only report interruption after 10 min.
@@ -94,14 +122,11 @@ class OneHotEncoding(Tweets):
                 del stop_time[line_name]
 
     def _save(self):
-        if self.path:
-            print(f'Saving here: {TWEET_ONE_HOT_PATH}')
-            self.df.to_csv(self.path, index=False)
-        else:
-            print("Saving failed because there no path specified.")
+        print(f'Trying saving here: {self.path}')
+        self.df.to_csv(self.path, index=False)
 
     def build(self):
-        if self.on_disk:
+        if self.load_from_disk:
             self._df = pd.read_csv(TWEET_ONE_HOT_PATH)
             self._df.date = pd.to_datetime(self._df.date.values, utc=True)
             self._df.date = self._df.date.apply(utc_to_local)
@@ -113,13 +138,13 @@ class OneHotEncoding(Tweets):
             self._closed_stations()
             self._set_duration()
 
-        if not self.on_disk and self.save:
-            self._save()
+            if self.save:
+                self._save()
 
 if __name__ == '__main__':
-    oh = OneHotEncoding(on_disk=True)
+    oh = OneHotEncoding(load_from_disk=True)
     oh.build()
-    print(oh.df.info())
+    print(oh.df)
 
 
 

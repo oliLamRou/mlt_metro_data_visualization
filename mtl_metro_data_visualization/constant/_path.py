@@ -13,6 +13,6 @@ TWEET_ONE_HOT_PATH = root/'data/tweets_one_hot.csv'
 
 TRAINING_DATA_PATH = '../../data/tweets/'
 
-SCRAP_DIR = "../../data/"
+SCRAP_DIR = root/'data/'
 
 MODEL_PATH = '../../model/categorization.keras'

@@ -12,6 +12,11 @@
 ## 2. One Hot encoding
 With key words, categorizing when service on the line is stop, slow or has restart. Extracting also other feature like when elevator are out of service.
 
+- Interruption per line
+- Duration of the interruption until full service is back
+- Ratio of which stations are more impacted
+- Elevator for REM
+
 ## 3. Machine learning for tweets categorization
 - Tokennized tweet
 - Word2vec
