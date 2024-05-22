@@ -2,14 +2,7 @@ from dash import Dash, html, Input, Output, callback, ctx, State, MATCH, ALL, dc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
-from mtl_metro_data_visualization.categorization.one_hot_encoding import OneHotEncoding
-# from mtl_metro_data_visualization.utils._utils import get_time_interval_df
-from mtl_metro_data_visualization.dashboard.time_interval import TimeInterval
-# from app.style import SIDEBAR_STYLE, CONTENT_STYLE
-# from app.form import Form
-
-#Data interval
-#Year, Quarter, Month, Week, All
+from mtl_metro_data_visualization.dashboard.lines_graph import LinesGraph
 
 #Data
 """
@@ -18,41 +11,37 @@ from mtl_metro_data_visualization.dashboard.time_interval import TimeInterval
 - Elevator Down
 - Per Station Interruption
 """
-
-t = TimeInterval()
-df = t.time_grouping(
-    column_list = ['stop'],
-    daily_grouping_func = max,
-    interval_grouping_func = sum,
-    interval = 'month'
-)
-
-fig = px.bar(df, x='date', y='stop', color='line')
+lines_graph = LinesGraph(
+        namespace = 'interruption',
+        columns = ['stop', 'slow'],
+        daily_grouping_func = max,
+        interval_grouping_func = sum,
+        interval = 'year'    
+    )
+# lines_graph = LinesGraph(interruptions)
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
-message = """
-Average: 
-Amount:
-bla bla:
-"""
 
+@app.callback(lines_graph.IO[0], lines_graph.IO[1])
+def filter_on_current(year_range, lines, interval):
+    df = lines_graph.grouped_df
+    if ctx.triggered_id == lines_graph.dropdown_id:
+        df = lines_graph.update_interval(interval)
 
-@app.callback(
-    Output('interruption_graph_id', 'figure'),
-    [
-        Input('year_range_slider_id', 'value'),
-    ]
-)
-def year_range_slider(year_range):
-    df_ = TimeInterval.year_range(df, year_range[0], year_range[1])
-    return px.bar(df_, x='date', y='stop', color='line')
+    df_ = df[df.line.isin(lines)]
+    df_ = lines_graph.year_range(df_, year_range[0], year_range[1])
+    fig = px.line(df_, x='date', y='stop', color='line')
+    fig.update_layout(showlegend=False)
+    return fig
 
 if __name__ == '__main__':
-    # form = Form()
-    app.layout = html.Div(
-        [
-            dcc.Markdown("Amount of day with at least 1 interruption of service."),
-            dcc.Graph(figure=fig, id='interruption_graph_id'),
-            dcc.RangeSlider(value=[2019, 2020], step=1, marks={i: str(i) for i in range(2018, 2024, 1)}, id='year_range_slider_id'),
-        ]
+    app.layout = dbc.Container(
+    [
+        lines_graph.interruption,
+    ],
+    fluid=True,
+    className="dbc dbc-ag-grid",
     )
+
     app.run(debug=True)
+
+
