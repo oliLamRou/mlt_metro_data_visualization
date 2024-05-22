@@ -21,20 +21,14 @@ class TimeInterval(OneHotEncoding):
             self._interval_df['month'] = pd.to_datetime(self._interval_df['date']).dt.month
             self._interval_df['day'] = pd.to_datetime(self._interval_df['date']).dt.day
             self._interval_df['weekday'] = pd.to_datetime(self._interval_df['date']).dt.weekday
-            self._interval_df['dayofyear'] = pd.to_datetime(self._interval_df['date']).dt.dayofyear
             self._interval_df['quarter'] = pd.to_datetime(self._interval_df['date']).dt.quarter
             self._interval_df['weekofyear'] = pd.to_datetime(self._interval_df['date']).dt.isocalendar()['week']
+
+            self._interval_df['dayofyear'] = pd.to_datetime(self._interval_df['date']).dt.dayofyear
         
         return self._interval_df
 
-    def get_line_daily(self, line):
-        line_df = self.df[self.df.line == line]
-        if line_df.empty:
-            raise ValueError(f'Line name: "{line}" is not present in the DF.')
-
-        return line_df.resample('d', on='date')        
-
-    def filter(self, line=None, column_list=None, daily_grouping_func=None, interval_grouping_func=None, interval=None):
+    def _filter(self, line, column_list, daily_grouping_func, interval_grouping_func=None, interval=None):
         #Line
         df = self.df[self.df.line == line]
         if df.empty:
@@ -49,16 +43,42 @@ class TimeInterval(OneHotEncoding):
         #Merge with full daily df to have every day of the year between start and end of the DF
         df = self.interval_df.merge(df, on='date', how='left').fillna(0)
 
-        #Group by interval longer than daily
-        if not interval:
-            return df.reset_index()
-        
-        group_column_list = [interval]
-        if interval != 'year':
-            group_column_list = ['year'] + group_column_list
 
-        return df.groupby(group_column_list)[column_list].apply(interval_grouping_func).reset_index()
+        if not interval:
+            df.date = df.date.dt.strftime('%Y-%m-%d').reset_index(drop=True)
+            return df[['date'] + column_list]
+
+        #Group by interval longer than daily
+        groupby_column_list = ['year', 'date']
+        if interval == 'month':
+            df.date = df.date.dt.strftime('%Y-%m').reset_index(drop=True)
+        elif interval in ['dayofyear', 'year']:
+            df.date = df[interval]
+            #remove year from list
+            if interval == 'year':
+                groupby_column_list = ['date']
+        else:
+            #Else need to combine to keep year + interval
+            df.date = df.year.astype(str) + '-' + df[interval].astype(str)
+
+        return df.groupby(groupby_column_list)[column_list].apply(interval_grouping_func).reset_index()
         
+    def time_grouping(self, column_list=None, daily_grouping_func=None, interval_grouping_func=None, interval=None):
+        all_line = pd.DataFrame()
+        for line in self.df.line.unique():
+            df = self._filter(
+                line = line,
+                column_list = column_list,
+                interval = interval,
+                daily_grouping_func = daily_grouping_func,
+                interval_grouping_func = interval_grouping_func
+            )
+            df['line'] = line
+            all_line = pd.concat([all_line, df])
+
+        return all_line
+
+
     @staticmethod
     def year_range(df, start, end):
         return df[
@@ -69,13 +89,15 @@ class TimeInterval(OneHotEncoding):
 
 if __name__ == '__main__':
     t = TimeInterval()
-    df = t.filter(
-        line = 'stm_orange',
-        column_list = ['stop', 'slow'],
-        interval = 'weekofyear',
-        daily_grouping_func = max,
-        interval_grouping_func = sum
-    )
+    all_line = t._filter(
+                line = 'stm_orange',
+                column_list = ['stop', 'slow'],
+                daily_grouping_func = max,
+                interval_grouping_func = sum,
+                interval = 'weekday'
+            )
 
-    df = TimeInterval.year_range(df, 2016, 2023)
-    print(df)
+    all_line = TimeInterval.year_range(all_line, 2022, 2023)
+    print(all_line)
+
+

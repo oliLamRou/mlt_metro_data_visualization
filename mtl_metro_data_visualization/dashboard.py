@@ -19,16 +19,15 @@ from mtl_metro_data_visualization.dashboard.time_interval import TimeInterval
 - Per Station Interruption
 """
 
-# oh = OneHotEncoding(load_from_disk=True)
 t = TimeInterval()
-df = t.filter(
-    line = 'stm_orange',
-    column_list = ['stop', 'slow'],
-    interval = 'year',
+df = t.time_grouping(
+    column_list = ['stop'],
     daily_grouping_func = max,
-    interval_grouping_func = sum
+    interval_grouping_func = sum,
+    interval = 'month'
 )
-fig = px.scatter(df, x="year", y="stop")
+
+fig = px.bar(df, x='date', y='stop', color='line')
 app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
 message = """
 Average: 
@@ -37,39 +36,23 @@ bla bla:
 """
 
 
-#SAVE CLEAR
-# @app.callback(
-#     [
-#         Output('cards_container-id', 'children'),
-#     ],
-#     [
-#         Input('save-button-id', 'n_clicks'),
-#     ],
-#     [
-#         State('title-id', 'value'),
-#     ])
-# def save_clear_button(save, clear, title, note, selected_category, new_category, value):
-#     category_value = new_category if selected_category == 'new category' else selected_category
-
-#     if ctx.triggered_id == 'save-button-id':
-#         form.new_entry('title', title)
-#         form.new_entry('note', note)
-#         form.new_entry(category_value, value)
-#         form.save()
-
-#     return form.cards, form.form
+@app.callback(
+    Output('interruption_graph_id', 'figure'),
+    [
+        Input('year_range_slider_id', 'value'),
+    ]
+)
+def year_range_slider(year_range):
+    df_ = TimeInterval.year_range(df, year_range[0], year_range[1])
+    return px.bar(df_, x='date', y='stop', color='line')
 
 if __name__ == '__main__':
     # form = Form()
     app.layout = html.Div(
         [
             dcc.Markdown("Amount of day with at least 1 interruption of service."),
-            dcc.Graph(figure=fig),
-            dcc.Markdown('_'),
-            dcc.RangeSlider(2019, 2020, 1, marks={2019: '2019', 2020: '2020'}, id='year_range_slider'),
-            dcc.Markdown(message)
-            # dbc.Container(form.form, style=SIDEBAR_STYLE, id='form_container-id'),
-            # dbc.Container(form.cards, style=CONTENT_STYLE, id='cards_container-id')
+            dcc.Graph(figure=fig, id='interruption_graph_id'),
+            dcc.RangeSlider(value=[2019, 2020], step=1, marks={i: str(i) for i in range(2018, 2024, 1)}, id='year_range_slider_id'),
         ]
     )
     app.run(debug=True)
