@@ -5,19 +5,21 @@ import plotly.express as px
 from mtl_metro_data_visualization.dashboard.time_interval import TimeInterval
 from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
 
-class LinesGraph(TimeInterval):
-    def __init__(self, namespace, columns, daily_grouping_func, interval_grouping_func, interval, load_from_disk=True, save=False):
-        super().__init__(columns, daily_grouping_func, interval_grouping_func, interval, load_from_disk, save)
+class DashboardSection(TimeInterval):
+    def __init__(self, namespace, title, column, daily_grouping_func, interval_grouping_func, interval, load_from_disk=True, save=False):
+        super().__init__(column, daily_grouping_func, interval_grouping_func, interval, load_from_disk, save)
 
+        self.title = title
         self.graph_id = f'{namespace}_graph_id'
         self.slider_id = f'{namespace}_slider_id'
         self.checklist_id = f'{namespace}_checklist_id'
         self.dropdown_id = f'{namespace}_dropdown_id'
+        self.stats_markdown_id = f'{namespace}_stats_markdown_id'
 
     @property
     def header(self):
         return html.H4(
-            "Interruptions", className="bg-primary text-white p-2 mb-2 text-center"
+            self.title, className="bg-primary text-white p-2 mb-2 text-center"
         )
 
     @property
@@ -69,10 +71,22 @@ class LinesGraph(TimeInterval):
             className="mb-4",
         )
 
+    def update_stats(self):
+        return f"""
+        ##### Combine Statistic
+        - Average: {round(self.filtered_df[self.column].mean(), 1)}  
+        - Max: {round(self.filtered_df[self.column].max(), 1)}
+
+        """
+
+    @property
+    def stats(self):
+        return html.Div([dcc.Markdown(children='placeholder', id=self.stats_markdown_id)])
+
     @property
     def controls(self):
         return dbc.Card(
-            [self.interval_dropdown, self.line_checklist, self.interval_slider],
+            [self.interval_dropdown, self.line_checklist, self.interval_slider, self.stats],
             body=True,
         )
 
@@ -94,7 +108,10 @@ class LinesGraph(TimeInterval):
 
     @property
     def IO(self):
-        out_ = Output(self.graph_id, 'figure')
+        out_ = [
+                Output(self.graph_id, 'figure'),
+                Output(self.stats_markdown_id, 'children'),
+            ]
         in_ = [
                 Input(self.slider_id, 'value'),
                 Input(self.checklist_id, 'value'),

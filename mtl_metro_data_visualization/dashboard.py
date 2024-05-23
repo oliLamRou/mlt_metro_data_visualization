@@ -2,7 +2,7 @@ from dash import Dash, html, Input, Output, callback, ctx, State, MATCH, ALL, dc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
-from mtl_metro_data_visualization.dashboard.lines_graph import LinesGraph
+from mtl_metro_data_visualization.dashboard.dashboard_section import DashboardSection
 
 #Data
 """
@@ -11,32 +11,70 @@ from mtl_metro_data_visualization.dashboard.lines_graph import LinesGraph
 - Elevator Down
 - Per Station Interruption
 """
-lines_graph = LinesGraph(
+
+def _callback(ds, col):
+    @app.callback(ds.IO[0], ds.IO[1])
+    def interruption_amount_callback(year_range, lines, interval):
+        df = ds.grouped_df
+        if ctx.triggered_id == ds.dropdown_id:
+            df = ds.update_interval(interval)
+
+        ds.filtered_lines = lines
+        ds.filtered_start = year_range[0]
+        ds.filtered_end = year_range[1]
+
+        fig = px.line(ds.filtered_df, x='date', y=col, color='line')
+        fig.update_layout(showlegend=False)
+
+        stats = ds.update_stats()
+
+        return [fig, stats]
+
+app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+
+
+#Cumulative
+interruption_amount = DashboardSection(
         namespace = 'interruption',
-        columns = ['stop', 'slow'],
+        title = 'Cumulative',
+        column = 'stop',
         daily_grouping_func = max,
         interval_grouping_func = sum,
         interval = 'year'    
     )
-# lines_graph = LinesGraph(interruptions)
-app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY])
+_callback(interruption_amount, 'stop')
 
-@app.callback(lines_graph.IO[0], lines_graph.IO[1])
-def filter_on_current(year_range, lines, interval):
-    df = lines_graph.grouped_df
-    if ctx.triggered_id == lines_graph.dropdown_id:
-        df = lines_graph.update_interval(interval)
+#Duration
+interruption_duration = DashboardSection(
+        namespace = 'duration',
+        title = 'Duration in Minute',
+        column = 'duration',
+        daily_grouping_func = sum,
+        interval_grouping_func = sum,
+        interval = 'year'    
+    )
+_callback(interruption_duration, 'duration')
 
-    df_ = df[df.line.isin(lines)]
-    df_ = lines_graph.year_range(df_, year_range[0], year_range[1])
-    fig = px.line(df_, x='date', y='stop', color='line')
-    fig.update_layout(showlegend=False)
-    return fig
+#Duration
+elevator = DashboardSection(
+        namespace = 'elevator',
+        title = 'Cumulative',
+        column = 'elevator',
+        daily_grouping_func = max,
+        interval_grouping_func = sum,
+        interval = 'year'    
+    )
+_callback(elevator, 'elevator')
 
 if __name__ == '__main__':
     app.layout = dbc.Container(
     [
-        lines_graph.interruption,
+        dcc.Markdown("### have some bullet point / summary here"),
+        dcc.Markdown("## Interruptions Of Service"),
+        interruption_amount.interruption,
+        interruption_duration.interruption,
+        dcc.Markdown("## Elevators Problems"),
+        elevator.interruption,
     ],
     fluid=True,
     className="dbc dbc-ag-grid",

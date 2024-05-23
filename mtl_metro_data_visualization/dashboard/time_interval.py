@@ -2,21 +2,27 @@ import pandas as pd
 import numpy as np
 
 from mtl_metro_data_visualization.categorization.one_hot_encoding import OneHotEncoding
+from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
 
 
 class TimeInterval(OneHotEncoding):
-    def __init__(self, columns, daily_grouping_func, interval_grouping_func, interval, load_from_disk=True, save=False):
+    def __init__(self, column, daily_grouping_func, interval_grouping_func, interval, load_from_disk=True, save=False):
         super().__init__(load_from_disk, save)
-        self.columns = columns
+        self.column = column
         self.daily_grouping_func = daily_grouping_func
         self.interval_grouping_func = interval_grouping_func 
         self.interval = interval
 
         self._interval_df = pd.DataFrame()
         self._grouped_df = pd.DataFrame()
+        self._filtered_df = pd.DataFrame()
 
         self.df_start_date = self.df.date.dt.strftime('%Y-%m-%d').min()
         self.df_end_date = self.df.date.dt.strftime('%Y-%m-%d').max()
+
+        self.filtered_lines = list(LINES_STATIONS.keys())
+        self.filtered_start = self.df.date.dt.strftime('%Y').min()
+        self.filtered_end = self.df.date.dt.strftime('%Y').max()
         
         self._time_range = np.array([])
 
@@ -47,7 +53,7 @@ class TimeInterval(OneHotEncoding):
         df = df.resample('d', on='date')
         
         #Combine funtion, sum, avg, max, min etc
-        df = df[self.columns].apply(self.daily_grouping_func)
+        df = df[self.column].apply(self.daily_grouping_func)
 
         #Merge with full daily df to have every day of the year between start and end of the DF
         df = self.interval_df.merge(df, on='date', how='left').fillna(0)
@@ -55,7 +61,7 @@ class TimeInterval(OneHotEncoding):
 
         if not self.interval:
             df.date = df.date.dt.strftime('%Y-%m-%d').reset_index(drop=True)
-            return df[['date'] + self.columns]
+            return df[['date'] + self.column]
 
         #Group by interval longer than daily
         groupby_column_list = ['year', 'date']
@@ -70,12 +76,18 @@ class TimeInterval(OneHotEncoding):
         else:
             df.date = df.year.astype(str) + '-' + df[self.interval].astype(str)
 
-        return df.groupby(groupby_column_list)[self.columns].apply(self.interval_grouping_func).reset_index()
+        return df.groupby(groupby_column_list)[self.column].apply(self.interval_grouping_func).reset_index()
 
     def update_interval(self, interval):
         self.interval = interval
         self.process_grouped_df()
         return self._grouped_df
+
+    @property
+    def filtered_df(self):
+        self._filtered_df = self.grouped_df[self.grouped_df.line.isin(self.filtered_lines)]
+        self._filtered_df = self.year_range(self._filtered_df, self.filtered_start, self.filtered_end)
+        return self._filtered_df
 
     def process_grouped_df(self):
         self._grouped_df = pd.DataFrame()
@@ -111,7 +123,7 @@ class TimeInterval(OneHotEncoding):
 
 if __name__ == '__main__':
     t = TimeInterval(
-        columns = ['stop', 'slow'],
+        column = 'stop',
         daily_grouping_func = max,
         interval_grouping_func = sum,
         interval = 'month'
