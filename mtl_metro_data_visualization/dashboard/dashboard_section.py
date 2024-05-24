@@ -10,7 +10,8 @@ class DashboardSection(TimeInterval):
         super().__init__(column, daily_grouping_func, interval_grouping_func, interval, load_from_disk, save)
 
         self.title = title
-        self.graph_id = f'{namespace}_graph_id'
+        self.graph_cumulative_id = f'{namespace}_graph_cumulative_id'
+        self.graph_duration_id = f'{namespace}_graph_duration_id'
         self.slider_id = f'{namespace}_slider_id'
         self.checklist_id = f'{namespace}_checklist_id'
         self.dropdown_id = f'{namespace}_dropdown_id'
@@ -28,7 +29,7 @@ class DashboardSection(TimeInterval):
             [
                 dbc.Label("Select Time Interval"),
                 dcc.Dropdown(
-                    ['year', 'month', 'day', 'weekday', 'quarter'],
+                    ['year', 'quarter', 'month', 'weekday'],
                     "year",
                     id=self.dropdown_id,
                     clearable=False,
@@ -92,9 +93,10 @@ class DashboardSection(TimeInterval):
 
     @property
     def tabs(self):
-        return dbc.Card(
-            dcc.Graph(id=self.graph_id)
-        )
+        tab1 = dbc.Tab([dcc.Graph(id=self.graph_cumulative_id)], label="Cumulative")
+        tab2 = dbc.Tab([dcc.Graph(id=self.graph_duration_id)], label="Duration")
+        
+        return dbc.Card(dcc.Tabs([tab1, tab2]))
 
     @property
     def interruption(self):
@@ -106,15 +108,41 @@ class DashboardSection(TimeInterval):
                 dbc.Col([self.tabs], width=8),
             ])
 
+    # @property
+    # def IO(self):
+    #     out_ = [
+    #             Output(self.graph_id, 'figure'),
+    #             Output(self.stats_markdown_id, 'children'),
+    #         ]
+    #     in_ = [
+    #             Input(self.slider_id, 'value'),
+    #             Input(self.checklist_id, 'value'),
+    #             Input(self.dropdown_id, 'value')
+    #         ]
+    #     return out_, in_
+
     @property
-    def IO(self):
+    def multi_line_interruption(self):
+        return dbc.Row([
+                self.header,
+                dbc.Col([
+                    dbc.Card(
+                        [self.line_checklist, self.interval_slider, self.stats],
+                        body=True,
+                    )
+                ]),
+                dbc.Col([self.tabs], width=8),
+            ])
+
+    @property
+    def multi_line_interruption_IO(self):
         out_ = [
-                Output(self.graph_id, 'figure'),
+                Output(self.graph_cumulative_id, 'figure'),
+                Output(self.graph_duration_id, 'figure'),
                 Output(self.stats_markdown_id, 'children'),
             ]
         in_ = [
                 Input(self.slider_id, 'value'),
-                Input(self.checklist_id, 'value'),
-                Input(self.dropdown_id, 'value')
+                Input(self.checklist_id, 'value')
             ]
         return out_, in_

@@ -44,10 +44,8 @@ class TimeInterval(OneHotEncoding):
         return self._interval_df
 
     def _filter(self, line):
-        #Line
+        #Filter Line
         df = self.df[self.df.line == line]
-        if df.empty:
-            raise ValueError(f'Line name: "{line}" is not present in the DF.')
 
         #Group on daily
         df = df.resample('d', on='date')
@@ -58,16 +56,18 @@ class TimeInterval(OneHotEncoding):
         #Merge with full daily df to have every day of the year between start and end of the DF
         df = self.interval_df.merge(df, on='date', how='left').fillna(0)
 
-
+        #Return daily if no interval
         if not self.interval:
             df.date = df.date.dt.strftime('%Y-%m-%d').reset_index(drop=True)
             return df[['date'] + self.column]
+        
 
-        #Group by interval longer than daily
         groupby_column_list = ['year', 'date']
+        #MONTH     
         if self.interval == 'month':
             df.date = df.date.dt.strftime('%Y-%m').reset_index(drop=True)
 
+        #
         elif self.interval in ['dayofyear', 'year']:
             df.date = df[self.interval]
             if self.interval == 'dayofyear':
@@ -82,12 +82,6 @@ class TimeInterval(OneHotEncoding):
         self.interval = interval
         self.process_grouped_df()
         return self._grouped_df
-
-    @property
-    def filtered_df(self):
-        self._filtered_df = self.grouped_df[self.grouped_df.line.isin(self.filtered_lines)]
-        self._filtered_df = self.year_range(self._filtered_df, self.filtered_start, self.filtered_end)
-        return self._filtered_df
 
     def process_grouped_df(self):
         self._grouped_df = pd.DataFrame()
@@ -104,6 +98,17 @@ class TimeInterval(OneHotEncoding):
         return self._grouped_df
 
     @property
+    def filtered_df(self):
+        #Filter Lines with list of name
+        self._filtered_df = self.grouped_df[
+            self.grouped_df.line.isin(self.filtered_lines)
+        ]
+        
+        #Filter by start and end year
+        self._filtered_df = self.year_range(self._filtered_df, self.filtered_start, self.filtered_end)
+        return self._filtered_df
+
+    @property
     def time_range(self):
         if not self._time_range.size:
             df = self.grouped_df
@@ -114,7 +119,6 @@ class TimeInterval(OneHotEncoding):
         
         return self._time_range
 
-    @staticmethod
     def year_range(df, start, end):
         return df[
             (df.year >= start) &
@@ -128,7 +132,24 @@ if __name__ == '__main__':
         interval_grouping_func = sum,
         interval = 'month'
     )
-    print(t.time_range)    
+    df = t.df.copy()
+    #Remove hour, min, sec
+    df.date = df.date.dt.round('d')
+    #Groupby line and date
+    grouped_df = df.groupby(['line', 'date'])
+    #Merge with sum all float
+    df = t.interval_df.merge(
+            grouped_df.sum().select_dtypes('float').reset_index(), 
+            on='date', 
+            how='left'
+        ).fillna(0)
 
+    #Merge with max all int
+    df = df.merge(
+            df.max(numeric_only=True).select_dtypes('int'),
+            on='date', 
+            how='left'
+        ).fillna(0)
+    
 
 

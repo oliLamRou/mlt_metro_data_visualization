@@ -25,3 +25,11 @@ With key words, categorizing when service on the line is stop, slow or has resta
 
 ## 4. Sentiment Analysis on article
 Gather all articles related to public transportation in the Montreal region from La Presse and the Gazette. Perform a sentiment analysis on these articles to determine the proportion of negative, neutral, and positive sentiments.
+
+
+TODO:
+- Adapt chart to have cumulative + duration tab
+- Sections: compare line, per line, elevator, sentiment, ml categorisation, 
+- Bullet point finding 
+- Uniform styling
+- top tweet style per category
