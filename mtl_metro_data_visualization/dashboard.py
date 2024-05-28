@@ -34,24 +34,25 @@ def multi_line_interruption_callback(ds, col):
         ds.filtered_end = year_range[1]
 
         fig1 = px.line(
-            ds.year_range, 
-            x='date', 
-            y=col, 
+            ds.slice_df,
+            x='interval', 
+            y='stop', 
             color='line', 
             title='Number of day with 1 or more interruption'
         ).update_layout(
             xaxis_title="Date", yaxis_title="amount of time"
         )
         fig2 = px.line(
-            ds.filtered_df, 
-            x='date', 
-            y=col, 
+            ds.slice_df, 
+            x='interval', 
+            y='duration', 
             color='line', 
             title='Total duration time'
         ).update_layout(
             xaxis_title="Date", yaxis_title="Minute"
         )
-        stats = ds.update_stats()
+        # stats = ds.update_stats()
+        stats = ''
 
         return [fig1, fig2, stats]
 
@@ -59,9 +60,6 @@ def multi_line_interruption_callback(ds, col):
 mutli_line_interruption = DashboardSection(
         namespace = 'multi_interruption',
         title = 'Comparative between lines',
-        column = 'stop',
-        daily_grouping_func = max,
-        interval_grouping_func = sum,
         interval = 'year'
     )
 multi_line_interruption_callback(mutli_line_interruption, 'stop')

@@ -6,8 +6,8 @@ from mtl_metro_data_visualization.dashboard.time_interval import TimeInterval
 from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
 
 class DashboardSection(TimeInterval):
-    def __init__(self, namespace, title, column, daily_grouping_func, interval_grouping_func, interval, load_from_disk=True, save=False):
-        super().__init__(column, daily_grouping_func, interval_grouping_func, interval, load_from_disk, save)
+    def __init__(self, namespace, title, interval, load_from_disk=True, save=False):
+        super().__init__(interval, load_from_disk, save)
 
         self.title = title
         self.graph_cumulative_id = f'{namespace}_graph_cumulative_id'
@@ -55,18 +55,22 @@ class DashboardSection(TimeInterval):
 
     @property
     def interval_slider(self):
+        marks = {i: ' ' for i, interval in enumerate(self.grouped_df.interval.unique())}
+        interval_split = self.grouped_df.interval.str.split('-')
         return html.Div(
             [
                 dbc.Label("Select Years"),
                 dcc.RangeSlider(
-                    min(self.time_range), 
-                    max(self.time_range),
-                    1,
+                    min=interval_split.str[0].astype(int).min(),
+                    max=interval_split.str[0].astype(int).max(),
+                    step=1,
+                    value=[interval_split.str[0].astype(int).min(), interval_split.str[0].astype(int).max()],
                     id=self.slider_id,
-                    marks=None,
-                    value=[min(self.time_range), max(self.time_range)],
-                    tooltip={"placement": "bottom", "always_visible": True},
-                    className="p-0",
+                    tooltip={
+                        "placement": "bottom", 
+                        "always_visible": True,
+                        "template": "{value}"
+                    },
                 ),
             ],
             className="mb-4",
