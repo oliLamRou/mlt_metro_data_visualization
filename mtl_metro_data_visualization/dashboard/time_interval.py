@@ -67,25 +67,28 @@ class TimeInterval(OneHotEncoding):
         self._grouped_df = self.daily_df.copy()
 
         if self.interval == 'year':
-            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.strftime('%Y')
-        
-        elif self.interval == 'year-month':
-            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.strftime('%Y-%m')
-
+            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.year
         
         elif self.interval == 'month':
-            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.strftime('%m')
+            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.month
+
+        elif self.interval == 'day':
+            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.dayofyear
+
+        elif self.interval == 'quarter':
+            self._grouped_df.loc[:,'interval'] = self._grouped_df.date.dt.quarter
 
         else:
             raise ValueError(f"Invalid interval: {self.interval}")
     
-        self._grouped_df = self._grouped_df.groupby(['line', 'interval']).sum(numeric_only=True).reset_index()
-        self._grouped_df.loc[:,'range'] = self._grouped_df.interval.str.split('-').str[0].astype(int)
+        self._grouped_df.loc[:,'range'] = self._grouped_df.date.dt.year
+        self._grouped_df = self._grouped_df.groupby(['line', 'range', 'interval']).sum(numeric_only=True).reset_index()
+        # self._grouped_df.loc[:,'range'] = self._grouped_df.interval.str.split('-').str[0].astype(int)
         return self._grouped_df
 
-    def update_interval(self, interval):
-        self.interval = interval
-        return self.grouped_df
+    # def update_interval(self, interval):
+    #     self.interval = interval
+    #     return self.grouped_df
 
     @property
     def slice_df(self):
@@ -95,18 +98,18 @@ class TimeInterval(OneHotEncoding):
             (self.grouped_df.line.isin(self.filtered_lines))
         ].reset_index(drop=True)
 
-    def year_range(df, start, end):
-        return df[
-            (df.year >= start) &
-            (df.year <= end)
-        ].reset_index(drop=True)
+    # def year_range(df, start, end):
+    #     return df[
+    #         (df.year >= start) &
+    #         (df.year <= end)
+    #     ].reset_index(drop=True)
 
 if __name__ == '__main__':
     t = TimeInterval(
-        interval = 'year'
+        interval = 'quarter'
     )
     # t.daily_df[['date', 'line', 'duration']].to_csv('./temp.csv', index=False)
-    print(t.grouped_df.interval.str.split('-').str[0].astype(int))
+    print(t.grouped_df[['line', 'range', 'interval']])
 
     #daily numerical + date
     #Fill gab with missing day and fillna(0)

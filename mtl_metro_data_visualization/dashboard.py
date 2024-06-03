@@ -25,8 +25,8 @@ from mtl_metro_data_visualization.dashboard.dashboard_section import DashboardSe
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
-
-def multi_line_interruption_callback(ds, col):
+#Multi Line
+def multi_line_interruption_callback(ds):
     @app.callback(ds.multi_line_interruption_IO[0], ds.multi_line_interruption_IO[1])
     def interruption_amount_callback(year_range, lines):
         ds.filtered_lines = lines
@@ -56,13 +56,52 @@ def multi_line_interruption_callback(ds, col):
 
         return [fig1, fig2, stats]
 
-#Multi Line
 mutli_line_interruption = DashboardSection(
         namespace = 'multi_interruption',
         title = 'Comparative between lines',
         interval = 'year'
     )
-multi_line_interruption_callback(mutli_line_interruption, 'stop')
+multi_line_interruption_callback(mutli_line_interruption)
+
+
+#per Line
+def per_line_interruption_callback(ds):
+    @app.callback(ds.per_line_interruption_IO[0], ds.per_line_interruption_IO[1])
+    def interruption_amount_callback(year_range, lines):
+        ds.filtered_lines = lines
+        ds.filtered_start = year_range[0]
+        ds.filtered_end = year_range[1]
+
+        fig1 = px.scatter(
+            ds.slice_df,
+            x='interval', 
+            y='range', 
+            color='line',
+            size='stop',
+        ).update_layout(
+            xaxis_title="Day Of The Year", yaxis_title="Year"
+        )
+        fig2 = px.scatter(
+            ds.slice_df, 
+            x='interval', 
+            y='range', 
+            color='line',
+            size='duration',
+            title='Total duration time'
+        ).update_layout(
+            xaxis_title="Day Of The Year", yaxis_title="Year"
+        )
+        # stats = ds.update_stats()
+        stats = ''
+
+        return [fig1, fig2, stats]
+
+per_line_interruption = DashboardSection(
+        namespace = 'per_line_interruption',
+        title = 'Per Line',
+        interval = 'day'
+    )
+per_line_interruption_callback(per_line_interruption)
 
 
 # def _callback(ds, col):
@@ -127,9 +166,12 @@ if __name__ == '__main__':
         dcc.Markdown("# Interruption of Service"),
         dcc.Markdown("bullet pointe of some finding"),
         mutli_line_interruption.multi_line_interruption,
-        # dcc.Markdown("### Single Line Analysis"),
-        # dcc.Markdown("## Interruptions Of Service"),
-        # interruption_amount.interruption,
+        dcc.Markdown("### Single Line Analysis"),
+        dcc.Markdown("## Interruptions Of Service"),
+        per_line_interruption.per_line_interruption,
+        dcc.Markdown("### Single Line Analysis"),
+        dcc.Markdown("## Interruptions Of Service"),
+
         # interruption_duration.interruption,
         # dcc.Markdown("## Elevators Problems"),
         # elevator.interruption,

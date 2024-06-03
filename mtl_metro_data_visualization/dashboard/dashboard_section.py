@@ -14,6 +14,7 @@ class DashboardSection(TimeInterval):
         self.graph_duration_id = f'{namespace}_graph_duration_id'
         self.slider_id = f'{namespace}_slider_id'
         self.checklist_id = f'{namespace}_checklist_id'
+        self.radioItems_id = f'{namespace}_radioItems_id'
         self.dropdown_id = f'{namespace}_dropdown_id'
         self.stats_markdown_id = f'{namespace}_stats_markdown_id'
 
@@ -54,17 +55,31 @@ class DashboardSection(TimeInterval):
         )
 
     @property
+    def line_radioItems(self):
+        return html.Div(
+            [
+                dbc.Label("Select Metro Line"),
+                dbc.RadioItems(
+                    id=self.radioItems_id,
+                    options=list(LINES_STATIONS.keys()),
+                    value='stm_verte',
+                    inline=True,
+                ),
+            ],
+            className="mb-4",
+        )
+
+    @property
     def interval_slider(self):
         marks = {i: ' ' for i, interval in enumerate(self.grouped_df.interval.unique())}
-        interval_split = self.grouped_df.interval.str.split('-')
         return html.Div(
             [
                 dbc.Label("Select Years"),
                 dcc.RangeSlider(
-                    min=interval_split.str[0].astype(int).min(),
-                    max=interval_split.str[0].astype(int).max(),
+                    min=self.grouped_df.range.min(),
+                    max=self.grouped_df.range.max(),
                     step=1,
-                    value=[interval_split.str[0].astype(int).min(), interval_split.str[0].astype(int).max()],
+                    value=[self.grouped_df.range.min(), self.grouped_df.range.max(),],
                     id=self.slider_id,
                     tooltip={
                         "placement": "bottom", 
@@ -112,19 +127,7 @@ class DashboardSection(TimeInterval):
                 dbc.Col([self.tabs], width=8),
             ])
 
-    # @property
-    # def IO(self):
-    #     out_ = [
-    #             Output(self.graph_id, 'figure'),
-    #             Output(self.stats_markdown_id, 'children'),
-    #         ]
-    #     in_ = [
-    #             Input(self.slider_id, 'value'),
-    #             Input(self.checklist_id, 'value'),
-    #             Input(self.dropdown_id, 'value')
-    #         ]
-    #     return out_, in_
-
+    #Multi Line
     @property
     def multi_line_interruption(self):
         return dbc.Row([
@@ -140,6 +143,33 @@ class DashboardSection(TimeInterval):
 
     @property
     def multi_line_interruption_IO(self):
+        out_ = [
+                Output(self.graph_cumulative_id, 'figure'),
+                Output(self.graph_duration_id, 'figure'),
+                Output(self.stats_markdown_id, 'children'),
+            ]
+        in_ = [
+                Input(self.slider_id, 'value'),
+                Input(self.checklist_id, 'value')
+            ]
+        return out_, in_
+
+    #Per Line
+    @property
+    def per_line_interruption(self):
+        return dbc.Row([
+                self.header,
+                dbc.Col([
+                    dbc.Card(
+                        [self.line_checklist, self.interval_slider, self.stats],
+                        body=True,
+                    )
+                ]),
+                dbc.Col([self.tabs], width=8),
+            ])
+
+    @property
+    def per_line_interruption_IO(self):
         out_ = [
                 Output(self.graph_cumulative_id, 'figure'),
                 Output(self.graph_duration_id, 'figure'),
