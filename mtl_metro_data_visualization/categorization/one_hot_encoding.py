@@ -144,7 +144,10 @@ class OneHotEncoding(Tweets):
 if __name__ == '__main__':
     oh = OneHotEncoding(load_from_disk=True)
     oh.build()
-    print(oh.df)
+    # for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.tweet.str.contains(r"entre les stations ([\w-]+) et ([\w-]+)", regex=True)].tweet.values:
+    #     print(tweet, '\n')
 
+    for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.stop == 1].tweet.values:
+        print(tweet, '\n')
 
 

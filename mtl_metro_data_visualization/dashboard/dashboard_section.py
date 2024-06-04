@@ -110,12 +110,20 @@ class DashboardSection(TimeInterval):
             body=True,
         )
 
-    @property
-    def tabs(self):
-        tab1 = dbc.Tab([dcc.Graph(id=self.graph_cumulative_id)], label="Cumulative")
-        tab2 = dbc.Tab([dcc.Graph(id=self.graph_duration_id)], label="Duration")
+    # @property
+    # def tabs(self):
+    #     tab1 = dbc.Tab([dcc.Graph(id=self.graph_cumulative_id)], label="Cumulative")
+    #     tab2 = dbc.Tab([dcc.Graph(id=self.graph_duration_id)], label="Duration")
         
-        return dbc.Card(dcc.Tabs([tab1, tab2]))
+    #     return dbc.Card(dcc.Tabs([tab1, tab2]))
+
+    def tab(self, id_, label):
+        return dbc.Tab(
+            [
+                dcc.Graph(id=id_)
+            ],
+            label=label
+        )
 
     @property
     def interruption(self):
@@ -132,13 +140,29 @@ class DashboardSection(TimeInterval):
     def multi_line_interruption(self):
         return dbc.Row([
                 self.header,
+                dcc.Markdown("""
+                    ###### STM
+                    - No surprise that the longest line have the most interruption.  
+                    - There is an up trend that suggest a network getting older and/or more people can create incident.
+                    - The pandemic was a down moment for the network and still there is more and more interuption
+                    ###### REM
+                    - REM started in august 2023. It's a faily short track and it had a rough start.
+                    - 
+                    """),
                 dbc.Col([
                     dbc.Card(
                         [self.line_checklist, self.interval_slider, self.stats],
                         body=True,
                     )
                 ]),
-                dbc.Col([self.tabs], width=8),
+                dbc.Col([
+                    dbc.Card(
+                        dcc.Tabs([
+                            self.tab(self.graph_cumulative_id, 'Cumulative'),
+                            self.tab(self.graph_duration_id, 'Duration'),
+                        ])
+                    )
+                ],width=8)
             ])
 
     @property
@@ -158,20 +182,50 @@ class DashboardSection(TimeInterval):
     @property
     def per_line_interruption(self):
         return dbc.Row([
-                self.header,
+                dcc.Markdown("""
+                    ###### REM  
+                    - Looking at the REM, it had a rough start but very quickly is under average when looking at STM lines.
+
+                    """),
                 dbc.Col([
                     dbc.Card(
                         [self.line_checklist, self.interval_slider, self.stats],
                         body=True,
                     )
                 ]),
-                dbc.Col([self.tabs], width=8),
+                dbc.Col([
+                    dbc.Card(
+                        dcc.Tabs([
+                            self.tab(self.graph_duration_id, 'Cumulative')
+                        ])
+                    )
+                ],width=8)
             ])
+
+    #Per Station
+    @property
+    def per_station_interruption(self):
+        return dbc.Row([
+                self.header,
+                dbc.Col([
+                    dbc.Card(
+                        [self.line_radioItems, self.interval_slider, self.stats],
+                        body=True,
+                    )
+                ]),
+                dbc.Col([
+                    dbc.Card(
+                        dcc.Tabs([
+                            self.tab(self.graph_cumulative_id, 'Cumulative')
+                        ])
+                    )
+                ],width=8)
+            ])
+
 
     @property
     def per_line_interruption_IO(self):
         out_ = [
-                Output(self.graph_cumulative_id, 'figure'),
                 Output(self.graph_duration_id, 'figure'),
                 Output(self.stats_markdown_id, 'children'),
             ]
@@ -180,3 +234,16 @@ class DashboardSection(TimeInterval):
                 Input(self.checklist_id, 'value')
             ]
         return out_, in_
+
+    @property
+    def per_station_interruption_IO(self):
+        out_ = [
+                Output(self.graph_cumulative_id, 'figure'),
+                Output(self.stats_markdown_id, 'children'),
+            ]
+        in_ = [
+                Input(self.slider_id, 'value'),
+                Input(self.radioItems_id, 'value')
+            ]
+        return out_, in_
+

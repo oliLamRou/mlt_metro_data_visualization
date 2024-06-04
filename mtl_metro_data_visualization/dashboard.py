@@ -1,9 +1,20 @@
+import numpy as np
+
 from dash import Dash, html, Input, Output, callback, ctx, State, MATCH, ALL, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from mtl_metro_data_visualization.dashboard.dashboard_section import DashboardSection
+from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
 
+
+color_discrete_map = {
+                 "rem_infoservice": "rgb(126,175,0)",
+                 "stm_orange": "rgb(237,106,0)",
+                 "stm_verte": "rgb(0,128,52)",
+                 "stm_bleue": "rgb(0,98,185)",
+                 "stm_jaune": "rgb(255,204,0)",
+             }
 
 """
 1. Yearly line comparison. Tab for "day with interruption" & "duration"
@@ -21,6 +32,7 @@ from mtl_metro_data_visualization.dashboard.dashboard_section import DashboardSe
 - Duration of Interruption
 - Elevator Down
 - Per Station Interruption
+- interruption vs achalandage 
 """
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
@@ -32,24 +44,51 @@ def multi_line_interruption_callback(ds):
         ds.filtered_lines = lines
         ds.filtered_start = year_range[0]
         ds.filtered_end = year_range[1]
+        yticks_stop = list(range(0, ds.grouped_df.stop.astype(int).max()+5, 5))
+        yticks_duration = list(range(0, ds.grouped_df.duration.astype(int).max()+500, 500))
 
         fig1 = px.line(
             ds.slice_df,
             x='interval', 
             y='stop', 
             color='line', 
-            title='Number of day with 1 or more interruption'
+            title='Number of day with 1 or more interruption',
+            color_discrete_map=color_discrete_map
         ).update_layout(
-            xaxis_title="Date", yaxis_title="amount of time"
+            xaxis_title="Date", 
+            yaxis_title="amount of time",
+            xaxis = dict(
+                tickmode = 'array',
+                tickvals = ds.slice_df.interval.astype(int),
+                ticktext = ds.slice_df.interval.astype(str),
+            ),
+            yaxis = dict(
+                tickmode = 'array',
+                tickvals = yticks_stop,
+                ticktext = yticks_stop,
+            )
         )
         fig2 = px.line(
             ds.slice_df, 
             x='interval', 
             y='duration', 
             color='line', 
-            title='Total duration time'
+            title='Total duration time',
+            color_discrete_map=color_discrete_map
         ).update_layout(
-            xaxis_title="Date", yaxis_title="Minute"
+            xaxis_title="Date", 
+            yaxis_title="Minute",
+            xaxis = dict(
+                tickmode = 'array',
+                tickvals = ds.slice_df.interval.astype(int),
+                ticktext = ds.slice_df.interval.astype(str),
+            ),
+            yaxis = dict(
+                tickmode = 'array',
+                tickvals = yticks_duration,
+                ticktext = yticks_duration,
+            )
+
         )
         # stats = ds.update_stats()
         stats = ''
@@ -73,28 +112,26 @@ def per_line_interruption_callback(ds):
         ds.filtered_end = year_range[1]
 
         fig1 = px.scatter(
-            ds.slice_df,
-            x='interval', 
-            y='range', 
-            color='line',
-            size='stop',
-        ).update_layout(
-            xaxis_title="Day Of The Year", yaxis_title="Year"
-        )
-        fig2 = px.scatter(
             ds.slice_df, 
             x='interval', 
             y='range', 
             color='line',
             size='duration',
-            title='Total duration time'
+            title='Total duration time',
+            color_discrete_map=color_discrete_map
         ).update_layout(
-            xaxis_title="Day Of The Year", yaxis_title="Year"
+            xaxis_title="Day Of The Year", 
+            yaxis_title="Year",
+            yaxis = dict(
+                tickmode = 'array',
+                tickvals = ds.slice_df.range.astype(int),
+                ticktext = ds.slice_df.range.astype(str),
+            )             
         )
         # stats = ds.update_stats()
         stats = ''
 
-        return [fig1, fig2, stats]
+        return [fig1, stats]
 
 per_line_interruption = DashboardSection(
         namespace = 'per_line_interruption',
@@ -103,78 +140,55 @@ per_line_interruption = DashboardSection(
     )
 per_line_interruption_callback(per_line_interruption)
 
+#per Station
+def per_station_interruption_callback(ds):
+    @app.callback(ds.per_station_interruption_IO[0], ds.per_station_interruption_IO[1])
+    def interruption_amount_callback(year_range, line):
+        ds.filtered_lines = [line]
+        ds.filtered_start = year_range[0]
+        ds.filtered_end = year_range[1]
+        data = ds.slice_df[['interval'] + list(LINES_STATIONS[line].keys())]
+        data.set_index('interval', inplace=True)
 
-# def _callback(ds, col):
-#     @app.callback(ds.IO[0], ds.IO[1])
-#     def interruption_amount_callback(year_range, lines, interval):
-#         df = ds.grouped_df
-#         if ctx.triggered_id == ds.dropdown_id:
-#             df = ds.update_interval(interval)
+        fig1 = px.imshow(
+                data,
+                color_continuous_scale = 'Hot',
+        ).update_layout(
+            yaxis = dict(
+                tickmode = 'array',
+                tickvals = ds.slice_df.interval.astype(int),
+                ticktext = ds.slice_df.interval.astype(str),
+            )    
+        )
 
-#         ds.filtered_lines = lines
-#         ds.filtered_start = year_range[0]
-#         ds.filtered_end = year_range[1]
+        # stats = ds.update_stats()
+        stats = ''
 
-#         if interval in ['month', 'weekday']:
-#             fig = px.bar(ds.filtered_df, x='date', y=col, color='line')
-#         else:
-#             fig = px.line(ds.filtered_df, x='date', y=col, color='line')
+        return [fig1, stats]
 
-#         fig.update_layout(showlegend=False)
-
-#         stats = ds.update_stats()
-
-#         return [fig, stats]
-
-
-# #Cumulative
-# interruption_amount = DashboardSection(
-#         namespace = 'interruption',
-#         title = 'Cumulative',
-#         column = 'stop',
-#         daily_grouping_func = max,
-#         interval_grouping_func = sum,
-#         interval = 'year'    
-#     )
-# _callback(interruption_amount, 'stop')
-
-# #Duration
-# interruption_duration = DashboardSection(
-#         namespace = 'duration',
-#         title = 'Duration in Minute',
-#         column = 'duration',
-#         daily_grouping_func = sum,
-#         interval_grouping_func = sum,
-#         interval = 'year'    
-#     )
-# _callback(interruption_duration, 'duration')
-
-# #Duration
-# elevator = DashboardSection(
-#         namespace = 'elevator',
-#         title = 'Cumulative',
-#         column = 'elevator',
-#         daily_grouping_func = max,
-#         interval_grouping_func = sum,
-#         interval = 'year'    
-#     )
-# _callback(elevator, 'elevator')
+per_station_interruption = DashboardSection(
+        namespace = 'per_station_interruption',
+        title = 'Per Station',
+        interval = 'year'
+    )
+per_station_interruption_callback(per_station_interruption)
 
 if __name__ == '__main__':
     app.layout = dbc.Container(
     [
-        dcc.Markdown("# Interruption of Service"),
-        dcc.Markdown("bullet pointe of some finding"),
+        dcc.Markdown("# Analysis of STM and REM lines"),
+        dcc.Markdown("""
+            - Data from twitter that goes back to 2013.  
+            - The Rem is a new line that is automated and has screen door at each station.  
+            - Let's see which line has the most interruption and if there is a pettern or not.  
+            """),
         mutli_line_interruption.multi_line_interruption,
         dcc.Markdown("### Single Line Analysis"),
         dcc.Markdown("## Interruptions Of Service"),
         per_line_interruption.per_line_interruption,
         dcc.Markdown("### Single Line Analysis"),
         dcc.Markdown("## Interruptions Of Service"),
-
-        # interruption_duration.interruption,
-        # dcc.Markdown("## Elevators Problems"),
-        # elevator.interruption,
+        per_station_interruption.per_station_interruption,        
     ],
     fluid=True,
     )

@@ -106,10 +106,13 @@ class TimeInterval(OneHotEncoding):
 
 if __name__ == '__main__':
     t = TimeInterval(
-        interval = 'quarter'
+        interval = 'year'
     )
-    # t.daily_df[['date', 'line', 'duration']].to_csv('./temp.csv', index=False)
-    print(t.grouped_df[['line', 'range', 'interval']])
+    t.filtered_start = 2013
+    t.filtered_end = 2024
+    data = t.slice_df[t.slice_df.line == 'stm_jaune'][['duration'] + list(LINES_STATIONS['stm_jaune'].keys())]
+    print(np.array(data))
+
 
     #daily numerical + date
     #Fill gab with missing day and fillna(0)
