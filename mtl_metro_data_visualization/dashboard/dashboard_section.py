@@ -11,6 +11,8 @@ class DashboardSection(TimeInterval):
         super().__init__(interval, load_from_disk, save)
 
         self.title = title
+
+        #Name Spaces
         self.graph_cumulative_id = f'{namespace}_graph_cumulative_id'
         self.graph_duration_id = f'{namespace}_graph_duration_id'
         self.slider_id = f'{namespace}_slider_id'
@@ -112,13 +114,6 @@ class DashboardSection(TimeInterval):
             body=True,
         )
 
-    # @property
-    # def tabs(self):
-    #     tab1 = dbc.Tab([dcc.Graph(id=self.graph_cumulative_id)], label="Cumulative")
-    #     tab2 = dbc.Tab([dcc.Graph(id=self.graph_duration_id)], label="Duration")
-        
-    #     return dbc.Card(dcc.Tabs([tab1, tab2]))
-
     def tab(self, id_, label):
         return dbc.Tab(
             [
@@ -192,6 +187,18 @@ class DashboardSection(TimeInterval):
                 ],width=8)
             ])
 
+    @property
+    def per_line_interruption_IO(self):
+        out_ = [
+                Output(self.graph_duration_id, 'figure'),
+                Output(self.stats_markdown_id, 'children'),
+            ]
+        in_ = [
+                Input(self.slider_id, 'value'),
+                Input(self.checklist_id, 'value')
+            ]
+        return out_, in_
+
     #Per Station
     @property
     def per_station_interruption(self):
@@ -219,19 +226,6 @@ class DashboardSection(TimeInterval):
                 ],width=8)
             ])
 
-
-    @property
-    def per_line_interruption_IO(self):
-        out_ = [
-                Output(self.graph_duration_id, 'figure'),
-                Output(self.stats_markdown_id, 'children'),
-            ]
-        in_ = [
-                Input(self.slider_id, 'value'),
-                Input(self.checklist_id, 'value')
-            ]
-        return out_, in_
-
     @property
     def per_station_interruption_IO(self):
         out_ = [
@@ -241,6 +235,41 @@ class DashboardSection(TimeInterval):
         in_ = [
                 Input(self.slider_id, 'value'),
                 Input(self.radioItems_id, 'value')
+            ]
+        return out_, in_
+
+    #Elevator
+    @property
+    def elevator_interruption(self):
+        return dbc.Row([
+                self.header,
+                dcc.Markdown(markdown.ELEVATOR),
+                dbc.Col([
+                    dbc.Card(
+                        [self.line_checklist, self.interval_slider, self.stats],
+                        body=True,
+                    )
+                ]),
+                dbc.Col([
+                    dbc.Card(
+                        dcc.Tabs([
+                            self.tab(self.graph_cumulative_id, 'All Mention'),
+                            self.tab(self.graph_duration_id, 'Broken')
+                        ])
+                    )
+                ],width=8)
+            ])
+
+    @property
+    def elevator_interruption_IO(self):
+        out_ = [
+                Output(self.graph_cumulative_id, 'figure'),
+                Output(self.graph_duration_id, 'figure'),
+                Output(self.stats_markdown_id, 'children'),
+            ]
+        in_ = [
+                Input(self.slider_id, 'value'),
+                Input(self.checklist_id, 'value')
             ]
         return out_, in_
 

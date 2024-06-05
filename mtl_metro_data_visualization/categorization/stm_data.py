@@ -10,8 +10,8 @@ df = pd.read_csv('~/Downloads/stm_interruption.csv')
 print(df.info())
 # print(df["Cause primaire"].unique())
 
-print(df[['Jour calendaire', "Heure de l'incident", 'Incident en minutes']])
-print(df['Incident en minutes'].unique())
+# print(df[['Jour calendaire', "Heure de l'incident", 'Incident en minutes']])
+print(df["KFS"].unique())
 
 #get same range
 #sum stop (and slow) daily
@@ -19,3 +19,4 @@ print(df['Incident en minutes'].unique())
 #compare by getting difference
 #scatter day of the year vs year with size = difference
 #Get a statistical comparison
+

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 from dash import Dash, html, Input, Output, callback, ctx, State, MATCH, ALL, dcc
 import dash_bootstrap_components as dbc
@@ -174,15 +175,69 @@ per_station_interruption = DashboardSection(
     )
 per_station_interruption_callback(per_station_interruption)
 
+#REM Elevator
+def elevator_interruption_callback(ds):
+    @app.callback(ds.elevator_interruption_IO[0], ds.elevator_interruption_IO[1])
+    def interruption_elevator_callback(year_range, line):
+        ds.filtered_lines = line
+        ds.filtered_start = year_range[0]
+        ds.filtered_end = year_range[-1]
+
+        fig1 = px.line(
+            ds.slice_df, 
+            x='interval', 
+            y='elevator',
+            color='line',
+            title='Duration per day',
+            color_discrete_map=color_discrete_map
+        ).update_layout(
+            xaxis_title="Month", 
+            yaxis_title="Days",
+            yaxis = dict(
+                tickmode = 'array',
+                tickvals = [days for days in range(0, (math.ceil(ds.slice_df.elevator.max() / 10) * 10 ) + 1, 5)],
+                ticktext = [str(days) for days in range(0, (math.ceil(ds.slice_df.elevator.max() / 10) * 10 ) + 1, 5)]
+            )             
+        )
+
+        fig2 = px.line(
+            ds.slice_df, 
+            x='interval', 
+            y='elevator_closed',
+            color='line',
+            title='Duration per day',
+            color_discrete_map=color_discrete_map
+        ).update_layout(
+            xaxis_title="Month", 
+            yaxis_title="Days",
+            yaxis = dict(
+                tickmode = 'array',
+                tickvals = [days for days in range(0, (math.ceil(ds.slice_df.elevator.max() / 10) * 10 ) + 1, 5)],
+                ticktext = [str(days) for days in range(0, (math.ceil(ds.slice_df.elevator.max() / 10) * 10 ) + 1, 5)]
+            )             
+        )
+        # stats = ds.update_stats()
+        stats = ''
+
+        return [fig1, fig2, stats]
+
+elevator_interruption = DashboardSection(
+        namespace = 'elevator_interruption',
+        title = 'Elevator',
+        interval = 'year'
+    )
+elevator_interruption_callback(elevator_interruption)
+
 if __name__ == '__main__':
     app.layout = dbc.Container(
     [
         dcc.Markdown(markdown.INTRO, style={'width': '80%'}),
         mutli_line_interruption.multi_line_interruption,
         per_line_interruption.per_line_interruption,
-        per_station_interruption.per_station_interruption,        
+        per_station_interruption.per_station_interruption,
+        elevator_interruption.elevator_interruption,
     ],
     fluid=True,
     )
 
-    app.run(debug=True)
+    app.run(debug=True, port=8056)

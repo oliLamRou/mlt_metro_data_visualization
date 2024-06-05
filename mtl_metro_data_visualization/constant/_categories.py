@@ -67,7 +67,15 @@ RESTART = [
 ]
 
 ELEVATOR = [
-    'ascenseur station'
+    'ascenseur',
+    "l’ascenseur"
+]
+
+ELEVATOR_CLOSED = [
+    'fermé',
+    'réouverture',
+    "service disponible",
+    'rouverts',
 ]
 
 STATION = [
@@ -99,6 +107,7 @@ CATEGORIES = {
     'slow': SLOW,
     'restart': RESTART,
     'elevator': ELEVATOR,
+    'elevator_closed': ELEVATOR_CLOSED,
     'station': STATION,
     'event': EVENT,
 }

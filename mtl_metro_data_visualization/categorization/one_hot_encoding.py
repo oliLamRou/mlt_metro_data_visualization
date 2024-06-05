@@ -126,8 +126,6 @@ class OneHotEncoding(Tweets):
         for k, v in stop_time.items():
             print('---', k, v)
 
-
-
     def _save(self):
         print(f'Trying saving here: {self.path}')
         self.df.to_csv(self.path, index=False)
@@ -140,7 +138,10 @@ class OneHotEncoding(Tweets):
 
         else:
             for k, v in CATEGORIES.items():
-                self._df[k] = self.df.preprocessed.str.contains("|".join(v)).astype(int)
+                if k == 'elevator_closed':
+                    self._df[k] = self.df.preprocessed.str.contains("|".join(v)).astype(int) * self.df.elevator
+                else:
+                    self._df[k] = self.df.preprocessed.str.contains("|".join(v)).astype(int)
 
             self._closed_stations()
             self._set_duration()
@@ -150,6 +151,8 @@ class OneHotEncoding(Tweets):
 
 if __name__ == '__main__':
     oh = OneHotEncoding(load_from_disk=False, save=True)
+    print(oh.df[oh.df.elevator == 1])
+    print(oh.df[oh.df.elevator_closed == 1])
     # for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.tweet.str.contains(r"entre les stations ([\w-]+) et ([\w-]+)", regex=True)].tweet.values:
     #     print(tweet, '\n')
 

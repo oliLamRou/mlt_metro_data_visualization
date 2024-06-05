@@ -30,3 +30,11 @@ PER_LINE = """
 ##### REM
 - Looking at the REM, it had a rough start but very quickly is under average when looking at STM lines.
 """
+
+ELEVATOR = """
+##### STM
+- Around 2016 the STM start to installed elevator. Prior to that none of there 68 station was equiped.
+- We can see the evolution of that by looking at all mention of 'ascenseur'
+##### REM
+- The REM has elevator in each station from day 1. There was a lot of days where an elevator was broken. So far in 2024 there was no problem.
+"""
