@@ -31,6 +31,14 @@ PER_LINE = """
 - Looking at the REM, it had a rough start but very quickly is under average when looking at STM lines.
 """
 
+PER_STATION = """
+##### STM  
+- Lionel-Groulx and Berri-UQAM have clearly more interruption and are transfer station. There is a clear split in 3 in the way STM manage interruptions.  
+- Bleue line has a cut at Parc but it's not the crossing of 2 lines.
+##### REM
+- For now the line seems to be fully open or close. Will be interresting to see when the network is completed.  
+"""
+
 ELEVATOR = """
 ##### STM
 - Around 2016 the STM start to installed elevator. Prior to that none of there 68 station was equiped.

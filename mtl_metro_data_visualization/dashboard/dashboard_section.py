@@ -98,9 +98,8 @@ class DashboardSection(TimeInterval):
     def update_stats(self):
         return f"""
         ##### Combine Statistic
-        - Average: {round(self.filtered_df[self.column].mean(), 1)}  
+        - Average: {round(self.filtered_df[self.column].mean(), 1)}
         - Max: {round(self.filtered_df[self.column].max(), 1)}
-
         """
 
     @property
@@ -204,13 +203,7 @@ class DashboardSection(TimeInterval):
     def per_station_interruption(self):
         return dbc.Row([
                 self.header,
-                dcc.Markdown("""
-                    ###### STM  
-                    - Lionel-Groulx and Berri-UQAM have clearly more interruption and are transfer station. There is a clear split in 3 in the way STM manage interruptions.  
-                    - Bleue line has a cut at Parc but it's not the crossing of 2 lines.
-                    ###### REM
-                    - For now the line seems to be fully open or close. Will be interresting to see when the network is completed.  
-                    """),
+                dcc.Markdown(markdown.PER_STATION),
                 dbc.Col([
                     dbc.Card(
                         [self.line_radioItems, self.interval_slider, self.stats],
