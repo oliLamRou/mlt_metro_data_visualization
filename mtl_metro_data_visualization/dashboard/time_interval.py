@@ -110,9 +110,13 @@ if __name__ == '__main__':
     )
     t.filtered_start = 2013
     t.filtered_end = 2024
-    data = t.slice_df[t.slice_df.line == 'stm_jaune'][['duration'] + list(LINES_STATIONS['stm_jaune'].keys())]
-    print(np.array(data))
+    # data = t.slice_df[t.slice_df.line == 'stm_jaune'][['duration'] + list(LINES_STATIONS['stm_jaune'].keys())]
+    # print(np.array(data))
 
+    values = t.grouped_df.interval.unique()
+    marks = {interval: str(interval) for interval in range(t.grouped_df.range.min(), t.grouped_df.range.max())}
+    # marks = {i: str(interval) for i, interval in enumerate([values[0], values[-1]])}
+    print(marks)
 
     #daily numerical + date
     #Fill gab with missing day and fillna(0)

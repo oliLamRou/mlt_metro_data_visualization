@@ -4,6 +4,7 @@ import plotly.express as px
 
 from mtl_metro_data_visualization.dashboard.time_interval import TimeInterval
 from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
+from mtl_metro_data_visualization.dashboard import markdown
 
 class DashboardSection(TimeInterval):
     def __init__(self, namespace, title, interval, load_from_disk=True, save=False):
@@ -71,7 +72,7 @@ class DashboardSection(TimeInterval):
 
     @property
     def interval_slider(self):
-        marks = {i: ' ' for i, interval in enumerate(self.grouped_df.interval.unique())}
+        marks = {interval: str(interval) for interval in range(self.grouped_df.range.min(), self.grouped_df.range.max())}
         return html.Div(
             [
                 dbc.Label("Select Years"),
@@ -81,6 +82,7 @@ class DashboardSection(TimeInterval):
                     step=1,
                     value=[self.grouped_df.range.min(), self.grouped_df.range.max(),],
                     id=self.slider_id,
+                    marks=marks,
                     tooltip={
                         "placement": "bottom", 
                         "always_visible": True,
@@ -140,15 +142,7 @@ class DashboardSection(TimeInterval):
     def multi_line_interruption(self):
         return dbc.Row([
                 self.header,
-                dcc.Markdown("""
-                    ###### STM
-                    - No surprise that the longest line have the most interruption.  
-                    - There is an up trend that suggest a network getting older and/or more people can create incident.
-                    - The pandemic was a down moment for the network and still there is more and more interuption
-                    ###### REM
-                    - REM started in august 2023. It's a faily short track and it had a rough start.
-                    - 
-                    """),
+                dcc.Markdown(markdown.PER_YEAR),
                 dbc.Col([
                     dbc.Card(
                         [self.line_checklist, self.interval_slider, self.stats],
@@ -158,7 +152,7 @@ class DashboardSection(TimeInterval):
                 dbc.Col([
                     dbc.Card(
                         dcc.Tabs([
-                            self.tab(self.graph_cumulative_id, 'Cumulative'),
+                            self.tab(self.graph_cumulative_id, 'Frequency'),
                             self.tab(self.graph_duration_id, 'Duration'),
                         ])
                     )
@@ -182,11 +176,7 @@ class DashboardSection(TimeInterval):
     @property
     def per_line_interruption(self):
         return dbc.Row([
-                dcc.Markdown("""
-                    ###### REM  
-                    - Looking at the REM, it had a rough start but very quickly is under average when looking at STM lines.
-
-                    """),
+                dcc.Markdown(markdown.PER_LINE),
                 dbc.Col([
                     dbc.Card(
                         [self.line_checklist, self.interval_slider, self.stats],
@@ -207,6 +197,13 @@ class DashboardSection(TimeInterval):
     def per_station_interruption(self):
         return dbc.Row([
                 self.header,
+                dcc.Markdown("""
+                    ###### STM  
+                    - Lionel-Groulx and Berri-UQAM have clearly more interruption and are transfer station. There is a clear split in 3 in the way STM manage interruptions.  
+                    - Bleue line has a cut at Parc but it's not the crossing of 2 lines.
+                    ###### REM
+                    - For now the line seems to be fully open or close. Will be interresting to see when the network is completed.  
+                    """),
                 dbc.Col([
                     dbc.Card(
                         [self.line_radioItems, self.interval_slider, self.stats],
@@ -216,7 +213,7 @@ class DashboardSection(TimeInterval):
                 dbc.Col([
                     dbc.Card(
                         dcc.Tabs([
-                            self.tab(self.graph_cumulative_id, 'Cumulative')
+                            self.tab(self.graph_cumulative_id, 'Frequency')
                         ])
                     )
                 ],width=8)

@@ -23,7 +23,14 @@ app.layout = dbc.Container([
     ]),
     dbc.Row([
         dbc.Col(dcc.Graph(id='example-graph', figure=fig), width=12)
-    ])
+    ]),
+    dcc.RangeSlider(
+        min=2020,
+        max=2022,
+        step=1,
+        value=[2020, 2022],
+        marks={2020: '', 2021: '', 2022: ''},
+    ),
 ], fluid=True)
 
 # Run the app

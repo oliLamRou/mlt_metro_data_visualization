@@ -17,7 +17,9 @@ STOP = [
     'service interruption continues',
     'service devrait reprendre sous',
     'actuellement interruption service ligne',
-    "d'interruption service actuellement ligne"
+    "d'interruption service actuellement ligne",
+    'cause interruption service',
+    'panne système contrôle cause délai'
 ]
 
 NORMAL = [
@@ -30,7 +32,6 @@ NORMAL = [
 ]
 
 SLOW = [
-    'reprise graduelle service ligne',
     'état service métro service reprend graduellement',
     'état service métro reprise graduelle',
     'bonjour ralentissement',
@@ -40,17 +41,29 @@ SLOW = [
     'bonjour service régulier reprend graduellement',
     'bonjour service reprise graduelle',
     'service maintenant reprise graduelle',
-    'reprise graduelle service',
     'service régulier reprend graduellement'
 ]
 
 RESTART = [
     'état service métro service rétabli',
     'bonjour service rétabli',
-    'service normal cause ralentissement résolue',
-    'service maintenant normal',
+    'reprise service ligne',
     'service reprend actuellement',
-    'service maintenant rétabli ligne'
+    'service maintenant normal',
+    'service maintenant rétabli ligne',
+    'service normal service rétabli',
+    'service normal réseau rétabli',
+    'service normal réseau maintenant rétabli',
+    'service normal rétabli',
+    'service normal cause ralentissement résolue',
+    'service normal repris ligne',
+    "nous cessons l’intervention",
+    'service retour normale station',
+    'interruption service maintenant terminée',
+    'reprise graduelle service ligne',
+    'reprise service normal',
+    "service normal l'ensemble réseau",
+    "cause l’interruption maintenant résolue"
 ]
 
 ELEVATOR = [

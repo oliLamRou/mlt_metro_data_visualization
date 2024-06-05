@@ -6,6 +6,7 @@ import plotly.express as px
 
 from mtl_metro_data_visualization.dashboard.dashboard_section import DashboardSection
 from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
+from mtl_metro_data_visualization.dashboard import markdown
 
 
 color_discrete_map = {
@@ -52,11 +53,11 @@ def multi_line_interruption_callback(ds):
             x='interval', 
             y='stop', 
             color='line', 
-            title='Number of day with 1 or more interruption',
+            title='Amount of days with 1 or more interruption',
             color_discrete_map=color_discrete_map
         ).update_layout(
-            xaxis_title="Date", 
-            yaxis_title="amount of time",
+            xaxis_title="Year", 
+            yaxis_title="Amount of Days",
             xaxis = dict(
                 tickmode = 'array',
                 tickvals = ds.slice_df.interval.astype(int),
@@ -73,10 +74,10 @@ def multi_line_interruption_callback(ds):
             x='interval', 
             y='duration', 
             color='line', 
-            title='Total duration time',
+            title='Duration total per year',
             color_discrete_map=color_discrete_map
         ).update_layout(
-            xaxis_title="Date", 
+            xaxis_title="Year", 
             yaxis_title="Minute",
             xaxis = dict(
                 tickmode = 'array',
@@ -88,7 +89,6 @@ def multi_line_interruption_callback(ds):
                 tickvals = yticks_duration,
                 ticktext = yticks_duration,
             )
-
         )
         # stats = ds.update_stats()
         stats = ''
@@ -117,10 +117,10 @@ def per_line_interruption_callback(ds):
             y='range', 
             color='line',
             size='duration',
-            title='Total duration time',
+            title='Duration per day',
             color_discrete_map=color_discrete_map
         ).update_layout(
-            xaxis_title="Day Of The Year", 
+            xaxis_title="Day of the year", 
             yaxis_title="Year",
             yaxis = dict(
                 tickmode = 'array',
@@ -153,6 +153,7 @@ def per_station_interruption_callback(ds):
         fig1 = px.imshow(
                 data,
                 color_continuous_scale = 'Hot',
+                title='Amount of interruption per station per year'
         ).update_layout(
             yaxis = dict(
                 tickmode = 'array',
@@ -176,23 +177,12 @@ per_station_interruption_callback(per_station_interruption)
 if __name__ == '__main__':
     app.layout = dbc.Container(
     [
-        dcc.Markdown("# Analysis of STM and REM lines"),
-        dcc.Markdown("""
-            - Data from twitter that goes back to 2013.  
-            - The Rem is a new line that is automated and has screen door at each station.  
-            - Let's see which line has the most interruption and if there is a pettern or not.  
-            """),
+        dcc.Markdown(markdown.INTRO, style={'width': '80%'}),
         mutli_line_interruption.multi_line_interruption,
-        dcc.Markdown("### Single Line Analysis"),
-        dcc.Markdown("## Interruptions Of Service"),
         per_line_interruption.per_line_interruption,
-        dcc.Markdown("### Single Line Analysis"),
-        dcc.Markdown("## Interruptions Of Service"),
         per_station_interruption.per_station_interruption,        
     ],
     fluid=True,
     )
 
     app.run(debug=True)
-
-

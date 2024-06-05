@@ -75,6 +75,7 @@ class OneHotEncoding(Tweets):
 
     #DURATION PROCESS
     def _set_duration(self):
+        print('---------------------')
         for date in self.df.date.dt.strftime('%Y-%m-%d').unique():
             single_day = self._get_open_to_close(date)
             self._set_duration_per_day(single_day)
@@ -102,7 +103,7 @@ class OneHotEncoding(Tweets):
 
         Args:
             single_day (DataFrame): DataFrame containing tweets for a single day.
-        """        
+        """
         stop_time = {}
         durations = []
         stations = set()
@@ -113,13 +114,19 @@ class OneHotEncoding(Tweets):
             if row.stop == 1 and stop_time.get(line_name) == None:
                 stop_time[line_name] = row.date
 
-            if (row.restart == 1 or row.normal == 1) and stop_time.get(line_name) != None:
+            if (row.restart == 1 or row.normal == 1 or row.slow == 1) and stop_time.get(line_name) != None:
                 stop_index = single_day[single_day.date == stop_time[line_name]].index
                 #Here I'm adding 10 min since stm says they only report interruption after 10 min.
                 duration = ((row.date - stop_time[line_name]).seconds / 60) + 10
                 self.df.loc[stop_index,'duration'] = duration
 
                 del stop_time[line_name]
+
+        #if stop till end of day.
+        for k, v in stop_time.items():
+            print('---', k, v)
+
+
 
     def _save(self):
         print(f'Trying saving here: {self.path}')
@@ -142,12 +149,11 @@ class OneHotEncoding(Tweets):
                 self._save()
 
 if __name__ == '__main__':
-    oh = OneHotEncoding(load_from_disk=True)
-    oh.build()
+    oh = OneHotEncoding(load_from_disk=False, save=True)
     # for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.tweet.str.contains(r"entre les stations ([\w-]+) et ([\w-]+)", regex=True)].tweet.values:
     #     print(tweet, '\n')
 
-    for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.stop == 1].tweet.values:
-        print(tweet, '\n')
+    # for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.stop == 1].tweet.values:
+    #     print(tweet, '\n')
 
 

@@ -11,9 +11,7 @@ from mtl_metro_data_visualization.categorization.one_hot_encoding import OneHotE
 from mtl_metro_data_visualization.constant._categories import CATEGORIES, MAX_WORDS, MAX_LEN
 from mtl_metro_data_visualization.constant._path import MODEL_PATH
 
-
 oh = OneHotEncoding()
-oh.encoding()
 df = oh.df
 
 tokenizer = Tokenizer(num_words=MAX_WORDS)
@@ -35,6 +33,3 @@ model.save(MODEL_PATH)
 
 loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
 print(f'Test accuracy: {accuracy}')
-
-
-

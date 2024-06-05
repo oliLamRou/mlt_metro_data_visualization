@@ -93,12 +93,26 @@ class Tweets:
         self._df.sort_values('raw_date', inplace=True)
         self._df.reset_index(drop=True, inplace=True)
 
+    def remove_at_user(self):
+        df = self._df.copy()
+        index = df[
+            (df.tweet.str.startswith('@')) & 
+            (
+                (~df.tweet.str.lower().str.startswith('@stm')) &
+                (~df.tweet.str.lower().str.startswith('@rem'))
+            )].index
+
+        self._df = df[~df.index.isin(index)]
+
     def ingest_scrapped_tweet(self):
         #Import and merge all line in 1 df
         self.merge_lines()
 
         #Join the list of string (raw_text) to make a full lengh message
         self._df['tweet'] = self._df.raw_text.apply(lambda x: " ".join(x[5:]))
+
+        #Remove answer to specific people @username but not @stm... @REM...
+        self.remove_at_user()
 
         #Removing spot word and more
         self.tweet_preprocessing()
@@ -118,8 +132,5 @@ class Tweets:
 if __name__ == '__main__':
     t = Tweets()
     t.ingest_scrapped_tweet()
-    print(t.df.loc[582])
-    # print(t.df.index.size)
-
-
-
+    for tweet in t.df[t.df.tweet.str.startswith('@')].tweet:
+        print(tweet, '\n')
