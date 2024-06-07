@@ -15,4 +15,4 @@ TRAINING_DATA_PATH = '../../data/tweets/'
 
 SCRAP_DIR = root/'data/'
 
-MODEL_PATH = '../../model/categorization.keras'
+MODEL_PATH = root/'model/categorization.keras'

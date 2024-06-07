@@ -132,5 +132,4 @@ class Tweets:
 if __name__ == '__main__':
     t = Tweets()
     t.ingest_scrapped_tweet()
-    for tweet in t.df[t.df.tweet.str.startswith('@')].tweet:
-        print(tweet, '\n')
+    print(t.df.columns)

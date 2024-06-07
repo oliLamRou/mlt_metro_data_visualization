@@ -1,41 +1,14 @@
 import numpy as np
 import math
 
-from dash import Dash, html, Input, Output, callback, ctx, State, MATCH, ALL, dcc
+from dash import Dash, html, ctx, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from mtl_metro_data_visualization.dashboard.dashboard_section import DashboardSection
-from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
 from mtl_metro_data_visualization.dashboard import markdown
-
-
-color_discrete_map = {
-                 "rem_infoservice": "rgb(126,175,0)",
-                 "stm_orange": "rgb(237,106,0)",
-                 "stm_verte": "rgb(0,128,52)",
-                 "stm_bleue": "rgb(0,98,185)",
-                 "stm_jaune": "rgb(255,204,0)",
-             }
-
-"""
-1. Yearly line comparison. Tab for "day with interruption" & "duration"
-    Only choice of line + years range
-
-2. Need to chose a line, then one line per year. tab for "day with interruption" & "duration"
-    
-
-
-"""
-
-#Data
-"""
-- Amount of Day with at least 1 Interruption of service, line chart with all lines with proper color
-- Duration of Interruption
-- Elevator Down
-- Per Station Interruption
-- interruption vs achalandage 
-"""
+from mtl_metro_data_visualization.constant._lines_stations import LINES_STATIONS
+from mtl_metro_data_visualization.constant._lines_stations import LINES_COLOR
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 
@@ -55,7 +28,7 @@ def multi_line_interruption_callback(ds):
             y='stop', 
             color='line', 
             title='Amount of days with 1 or more interruption',
-            color_discrete_map=color_discrete_map
+            color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Year", 
             yaxis_title="Amount of Days",
@@ -76,7 +49,7 @@ def multi_line_interruption_callback(ds):
             y='duration', 
             color='line', 
             title='Duration total per year',
-            color_discrete_map=color_discrete_map
+            color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Year", 
             yaxis_title="Minute",
@@ -91,8 +64,14 @@ def multi_line_interruption_callback(ds):
                 ticktext = yticks_duration,
             )
         )
-        # stats = ds.update_stats()
-        stats = ''
+        stats = f"""
+        ###### Frequency
+        - Average: {round(ds.slice_df['stop'].mean(), 1)} 
+        - Max: {round(ds.slice_df['stop'].max(), 1)}
+        ###### Duration
+        - Average: {round(ds.slice_df['duration'].mean(), 1)}
+        - Max: {round(ds.slice_df['duration'].max(), 1)}
+        """
 
         return [fig1, fig2, stats]
 
@@ -119,7 +98,7 @@ def per_line_interruption_callback(ds):
             color='line',
             size='duration',
             title='Duration per day',
-            color_discrete_map=color_discrete_map
+            color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Day of the year", 
             yaxis_title="Year",
@@ -129,9 +108,11 @@ def per_line_interruption_callback(ds):
                 ticktext = ds.slice_df.range.astype(str),
             )             
         )
-        # stats = ds.update_stats()
-        stats = ''
-
+        stats = f"""
+        ###### Duration
+        - Average: {round(ds.slice_df['duration'].mean(), 1)} 
+        - Max: {round(ds.slice_df['duration'].max(), 1)}
+        """
         return [fig1, stats]
 
 per_line_interruption = DashboardSection(
@@ -163,9 +144,13 @@ def per_station_interruption_callback(ds):
             )    
         )
 
-        # stats = ds.update_stats()
-        stats = ''
-
+        top3 = data.mean().sort_values()[-3:].sort_values(ascending=False)
+        stats = f"""
+        ###### Top 3 Station (average)
+        1. {top3.index[0].capitalize()}: {round(top3[0], 2)}
+        2. {top3.index[1].capitalize()}: {round(top3[1], 2)}
+        3. {top3.index[2].capitalize()}: {round(top3[2], 2)}
+        """
         return [fig1, stats]
 
 per_station_interruption = DashboardSection(
@@ -189,7 +174,7 @@ def elevator_interruption_callback(ds):
             y='elevator',
             color='line',
             title='Duration per day',
-            color_discrete_map=color_discrete_map
+            color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Month", 
             yaxis_title="Days",
@@ -206,7 +191,7 @@ def elevator_interruption_callback(ds):
             y='elevator_closed',
             color='line',
             title='Duration per day',
-            color_discrete_map=color_discrete_map
+            color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Month", 
             yaxis_title="Days",
@@ -216,8 +201,14 @@ def elevator_interruption_callback(ds):
                 ticktext = [str(days) for days in range(0, (math.ceil(ds.slice_df.elevator.max() / 10) * 10 ) + 1, 5)]
             )             
         )
-        # stats = ds.update_stats()
-        stats = ''
+        stats = f"""
+        ###### Frequency
+        - Average: {round(ds.slice_df['elevator'].mean(), 1)} 
+        - Max: {round(ds.slice_df['elevator'].max(), 1)}
+        ###### Duration
+        - Average: {round(ds.slice_df['elevator_closed'].mean(), 1)}
+        - Max: {round(ds.slice_df['elevator_closed'].max(), 1)}
+        """
 
         return [fig1, fig2, stats]
 
@@ -236,8 +227,9 @@ if __name__ == '__main__':
         per_line_interruption.per_line_interruption,
         per_station_interruption.per_station_interruption,
         elevator_interruption.elevator_interruption,
+        dcc.Markdown(markdown.CONCLUSION, style={'width': '80%'})
     ],
     fluid=True,
     )
 
-    app.run(debug=True, port=8056)
+    app.run(debug=True)

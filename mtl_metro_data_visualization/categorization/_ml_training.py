@@ -15,8 +15,8 @@ oh = OneHotEncoding()
 df = oh.df
 
 tokenizer = Tokenizer(num_words=MAX_WORDS)
-tokenizer.fit_on_texts(df.preprocessed.values)
-sequences = tokenizer.texts_to_sequences(df.preprocessed.values)
+tokenizer.fit_on_texts(df.preprocessed.fillna('').values)
+sequences = tokenizer.texts_to_sequences(df.preprocessed.fillna('').values)
 X_processed = pad_sequences(sequences, maxlen=MAX_LEN)
 
 inputs = 64

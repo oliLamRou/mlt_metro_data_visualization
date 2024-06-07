@@ -1,5 +1,13 @@
 import pandas as pd
 
+LINES_COLOR = {
+    "rem_infoservice": "rgb(126,175,0)",
+    "stm_orange": "rgb(237,106,0)",
+    "stm_verte": "rgb(0,128,52)",
+    "stm_bleue": "rgb(0,98,185)",
+    "stm_jaune": "rgb(255,204,0)",
+}
+
 VERTE = {
     'angrignon': 1,
     'monk': 2,

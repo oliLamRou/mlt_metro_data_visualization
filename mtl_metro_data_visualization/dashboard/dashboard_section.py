@@ -95,13 +95,6 @@ class DashboardSection(TimeInterval):
             className="mb-4",
         )
 
-    def update_stats(self):
-        return f"""
-        ##### Combine Statistic
-        - Average: {round(self.filtered_df[self.column].mean(), 1)}
-        - Max: {round(self.filtered_df[self.column].max(), 1)}
-        """
-
     @property
     def stats(self):
         return html.Div([dcc.Markdown(children='placeholder', id=self.stats_markdown_id)])
@@ -146,9 +139,15 @@ class DashboardSection(TimeInterval):
                 dbc.Col([
                     dbc.Card(
                         dcc.Tabs([
-                            self.tab(self.graph_cumulative_id, 'Frequency'),
-                            self.tab(self.graph_duration_id, 'Duration'),
-                        ])
+                            self.tab(
+                                self.graph_cumulative_id,
+                                label='Frequency'
+                                ),
+                            self.tab(
+                                self.graph_duration_id, 
+                                label='Duration'
+                                ),
+                        ], id='frq_dur_id')
                     )
                 ],width=8)
             ])
@@ -162,7 +161,7 @@ class DashboardSection(TimeInterval):
             ]
         in_ = [
                 Input(self.slider_id, 'value'),
-                Input(self.checklist_id, 'value')
+                Input(self.checklist_id, 'value'),
             ]
         return out_, in_
 
@@ -180,7 +179,7 @@ class DashboardSection(TimeInterval):
                 dbc.Col([
                     dbc.Card(
                         dcc.Tabs([
-                            self.tab(self.graph_duration_id, 'Cumulative')
+                            self.tab(self.graph_duration_id, 'Distribution Throught Year')
                         ])
                     )
                 ],width=8)

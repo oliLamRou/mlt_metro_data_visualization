@@ -83,12 +83,7 @@ class TimeInterval(OneHotEncoding):
     
         self._grouped_df.loc[:,'range'] = self._grouped_df.date.dt.year
         self._grouped_df = self._grouped_df.groupby(['line', 'range', 'interval']).sum(numeric_only=True).reset_index()
-        # self._grouped_df.loc[:,'range'] = self._grouped_df.interval.str.split('-').str[0].astype(int)
         return self._grouped_df
-
-    # def update_interval(self, interval):
-    #     self.interval = interval
-    #     return self.grouped_df
 
     @property
     def slice_df(self):
@@ -98,17 +93,16 @@ class TimeInterval(OneHotEncoding):
             (self.grouped_df.line.isin(self.filtered_lines))
         ].reset_index(drop=True)
 
-    # def year_range(df, start, end):
-    #     return df[
-    #         (df.year >= start) &
-    #         (df.year <= end)
-    #     ].reset_index(drop=True)
-
 if __name__ == '__main__':
     t = TimeInterval(
         interval = 'year'
     )
     t.filtered_start = 2013
     t.filtered_end = 2024
+    data = t.slice_df[['interval'] + list(LINES_STATIONS['stm_verte'].keys())]
+    data.set_index('interval', inplace=True)
+    top3 = data.mean().sort_values()[-3:].sort_values()
+    print(top3.index[0])
+
 
 
