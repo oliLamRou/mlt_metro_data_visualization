@@ -150,13 +150,13 @@ class OneHotEncoding(Tweets):
                 self._save()
 
 if __name__ == '__main__':
-    oh = OneHotEncoding(load_from_disk=False, save=True)
-    print(oh.df[oh.df.elevator == 1])
-    print(oh.df[oh.df.elevator_closed == 1])
-    # for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.tweet.str.contains(r"entre les stations ([\w-]+) et ([\w-]+)", regex=True)].tweet.values:
+    oh = OneHotEncoding(load_from_disk=True, save=False)
+    df = oh.df[oh.df.line == 'stm_orange'].sort_values('duration')
+    for i, row in df[df.duration > 0].iterrows():
+        print(row.duration, row.tweet, '\n')
+
+    # for tweet in df[df.tweet.str.contains('système')].tweet:
     #     print(tweet, '\n')
 
-    # for tweet in oh.df[(oh.df.line == 'rem_infoservice')][oh.df.stop == 1].tweet.values:
-    #     print(tweet, '\n')
-
-
+    # for i, row in df[df.tweet.str.contains('système')].iterrows():
+    #     print(row.date, row.tweet)

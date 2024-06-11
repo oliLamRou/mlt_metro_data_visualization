@@ -179,7 +179,7 @@ class DashboardSection(TimeInterval):
                 dbc.Col([
                     dbc.Card(
                         dcc.Tabs([
-                            self.tab(self.graph_duration_id, 'Distribution Throught Year')
+                            self.tab(self.graph_duration_id, 'Duration')
                         ])
                     )
                 ],width=8)

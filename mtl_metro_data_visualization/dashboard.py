@@ -31,7 +31,7 @@ def multi_line_interruption_callback(ds):
             color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Year", 
-            yaxis_title="Amount of Days",
+            yaxis_title="Amount Of Days",
             xaxis = dict(
                 tickmode = 'array',
                 tickvals = ds.slice_df.interval.astype(int),
@@ -48,7 +48,7 @@ def multi_line_interruption_callback(ds):
             x='interval', 
             y='duration', 
             color='line', 
-            title='Duration total per year',
+            title='Duration Total Per Year',
             color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Year", 
@@ -100,7 +100,7 @@ def per_line_interruption_callback(ds):
             title='Duration per day',
             color_discrete_map=LINES_COLOR
         ).update_layout(
-            xaxis_title="Day of the year", 
+            xaxis_title="Day Of The Year", 
             yaxis_title="Year",
             yaxis = dict(
                 tickmode = 'array',
@@ -134,8 +134,8 @@ def per_station_interruption_callback(ds):
 
         fig1 = px.imshow(
                 data,
-                color_continuous_scale = 'Hot',
-                title='Amount of interruption per station per year'
+                color_continuous_scale = 'OrRd',
+                title='Interruption Per Station'
         ).update_layout(
             yaxis = dict(
                 tickmode = 'array',
@@ -173,7 +173,7 @@ def elevator_interruption_callback(ds):
             x='interval', 
             y='elevator',
             color='line',
-            title='Duration per day',
+            title='Duration Per Day',
             color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Month", 
@@ -190,7 +190,7 @@ def elevator_interruption_callback(ds):
             x='interval', 
             y='elevator_closed',
             color='line',
-            title='Duration per day',
+            title='Duration Per Day',
             color_discrete_map=LINES_COLOR
         ).update_layout(
             xaxis_title="Month", 
