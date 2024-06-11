@@ -1,5 +1,3 @@
-# mlt_metro_data_visualization
-
 # Project Structure
 ## Data
 ### Web Scrapping
@@ -45,3 +43,5 @@ one event but combine the duration of all interruptions throughout the day.
 
 ## Dashboard
 * Run `mtl_metro_data_visualization/dashboard.py` to start the server. (http://127.0.0.1:8050/)
+
+![Dashboard Exemple](/data/screenshot/dash_screenshot.png)
